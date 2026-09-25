@@ -14,7 +14,7 @@ It **observes the workflow you already have**. Keep using your terminal, your ag
 
 Branches also lives in the menu bar. When something needs you, the icon lights up in color and shows a count, and clicking it lists every live session. Click one to jump to it. With the menu bar icon on, closing the window keeps Branches watching. You can turn it off in the `⋯` settings.
 
-<p align="center"><img src="docs/images/menubar.png" width="340" alt="The Branches menu bar panel listing sessions by urgency"></p>
+<p align="center"><img src="docs/images/menubar-icon.png" height="30" alt="The Branches menu bar icon in color with a count of 2"><br><br><img src="docs/images/menubar-open.png" width="340" alt="The Branches menu bar panel listing sessions by urgency"></p>
 
 ## Notifications (optional)
 
@@ -89,7 +89,7 @@ The design docs are in [`docs/`](docs/00-start-here.md).
 ## Contributing
 
 - `swift build && swift test`
-- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --scene dusk --screenshot docs/images/screenshot.png --menu-screenshot docs/images/menubar.png` regenerates the README screenshots. The app icon master is `Resources/AppIcon.png`; `scripts/make-icon.sh` rebuilds the `.icns` from it.
+- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --scene dusk --screenshot docs/images/screenshot.png --menu-bar-screenshot docs/images/menubar` regenerates the README screenshots (it briefly adds its own menu bar icon and clicks it). The app icon master is `Resources/AppIcon.png`; `scripts/make-icon.sh` rebuilds the `.icns` from it.
 - Read [CLAUDE.md](CLAUDE.md) for the project's hard rules, which apply to humans too.
 - To add a provider (Gemini CLI, OpenCode, …), see [Sources/BranchesKit/Providers/README.md](Sources/BranchesKit/Providers/README.md).
 
