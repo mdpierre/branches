@@ -2,7 +2,7 @@
 
 Deliverables 8 and 9. The goal: *a refined developer tool interpreted through forest materials*. The design is calm, native and dense. It is **not** a cartoon forest.
 
-**Forest v1 (2026-09-24).** The look was made more themed: a treeline header, plant status glyphs, twig connectors and a dark forest-floor background. The rule that keeps it a developer tool: **every drawing carries information or sits behind the content**, and the status words stay literal next to every glyph. Everything is drawn in code. There are no image assets.
+**Forest v1 (2026-09-24).** The look was made more themed: a treeline header, plant status glyphs, twig connectors and a dark forest-floor background. The rule that keeps it a developer tool: **every drawing carries information or sits behind the content**, and the status words stay literal next to every glyph. Everything in the app is drawn in code. The app icon is the only image asset.
 
 ---
 
@@ -140,4 +140,8 @@ These live in `DesignSystem/Theme.swift` as `Color` extensions backed by an asse
 Living, not busy. Ambient motion only ever means something: a sprout sways because an agent is working, and a firefly glows because one is waiting. Everything else is a transition under 200 ms. With nothing working or waiting, nothing moves. Ambient motion runs in Core Animation, so CPU stays near zero.
 
 ### Icon direction
-The app icon is an abstract single stroke that forks once and ends in a small bright node, drawn in cream on deep moss. The status glyphs and the header are drawn in code (see above). Everything else uses SF Symbols (`arrow.turn.down.left`, `ellipsis`, `folder`, `doc.on.doc`). Keep new drawings to the same rule: flat shapes, forest palette, no gradients on glyphs beyond soft halos, and no wood grain or cartoon faces.
+The app icon is a warm brown trunk that forks into two branches with leaves. One branch ends in a green node (working) and the other in a glowing red node (needs you). It sits on a deep forest-green tile with faint fireflies. The master is `Resources/AppIcon.png` (1024 × 1024, on the standard 824 pt tile grid). `scripts/make-icon.sh` builds `AppIcon.icns` from it.
+
+The menu bar icon is the same fork and two nodes without the leaves, drawn in code (`MenuBarGlyph`, 15 × 16 pt). Normally it is a template image, so it follows the menu bar's light/dark style. When a session needs you, it switches to the accent colors (brown trunk, green and red nodes) and shows the count beside it.
+
+The status glyphs and the header are drawn in code (see above). Everything else uses SF Symbols (`arrow.turn.down.left`, `ellipsis`, `folder`, `doc.on.doc`). Keep new in-app drawings to the same rule: flat shapes, forest palette, no gradients on glyphs beyond soft halos, and no wood grain or cartoon faces.
