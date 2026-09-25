@@ -22,7 +22,12 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
 
     func requestPermission() async -> Bool {
         guard let center else { return false }
-        return (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+        // The completion-handler form: older SDKs (CI's) reject passing the main-actor `center` to the async one.
+        return await withCheckedContinuation { continuation in
+            center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                continuation.resume(returning: granted)
+            }
+        }
     }
 
     func process(_ snapshot: StoreSnapshot, needsYou: Bool, done: Bool) {
