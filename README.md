@@ -6,7 +6,7 @@
 
 Branches is a small, free, open-source Mac app that shows every Claude Code and Codex session running on your Mac, what each one is doing, and whether it needs you. Double-click a session to jump straight to its terminal tab.
 
-<p align="center"><img src="docs/images/screenshot.png" width="460" alt="Branches showing sessions grouped by project with Working, Needs you, Done and Idle statuses"></p>
+<p align="center"><img src="docs/images/window-dusk.png" width="460" alt="Branches showing sessions grouped by project with Working, Needs you, Done and Idle statuses"></p>
 
 It **observes the workflow you already have**. Keep using your terminal, your agent CLI, tmux and your usual launch habits. Branches doesn't launch, prompt or control anything, and it needs no setup.
 
@@ -89,7 +89,7 @@ The design docs are in [`docs/`](docs/00-start-here.md).
 ## Contributing
 
 - `swift build && swift test`
-- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --scene dusk --screenshot docs/images/screenshot.png --menu-bar-screenshot docs/images/menubar` regenerates the README screenshots (it briefly adds its own menu bar icon and clicks it). The app icon master is `Resources/AppIcon.png`; `scripts/make-icon.sh` rebuilds the `.icns` from it.
+- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --scene dusk --screenshot docs/images/window-dusk.png --menu-bar-screenshot docs/images/menubar` regenerates the README screenshots (it briefly adds its own menu bar icon and clicks it). The app icon master is `Resources/AppIcon.png`; `scripts/make-icon.sh` rebuilds the `.icns` from it.
 - Read [CLAUDE.md](CLAUDE.md) for the project's hard rules, which apply to humans too.
 - To add a provider (Gemini CLI, OpenCode, …), see [Sources/BranchesKit/Providers/README.md](Sources/BranchesKit/Providers/README.md).
 
