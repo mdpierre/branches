@@ -336,12 +336,15 @@ struct ForestBackground: View {
 
 // MARK: - Grain
 
-/// A tile of random gray noise, generated once, repeated at very low strength.
+/// A tile of soft gray noise, generated once, repeated at very low strength. Matched to the
+/// Forest v1 mockup's SVG fractal noise as seen through its screen blend: about 37% gray with a
+/// small spread (±9%), one tile pixel per point so the specks are soft rather than sharp.
 struct GrainOverlay: View {
     var body: some View {
         if let tile = Self.tile {
-            Image(decorative: tile, scale: 2)
+            Image(decorative: tile, scale: 1)
                 .resizable(resizingMode: .tile)
+                .interpolation(.medium)
                 .blendMode(.screen)
                 .opacity(0.07)
                 .allowsHitTesting(false)
@@ -350,15 +353,21 @@ struct GrainOverlay: View {
 
     @MainActor private static let tile: CGImage? = {
         let size = 128
+        let mean = 0.367, spread = 0.093
         var state: UInt64 = 0x9E37_79B9_7F4A_7C15
+        func uniform() -> Double {
+            state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            return Double(state >> 11) / Double(1 << 53)
+        }
         var bytes = [UInt8](repeating: 0, count: size * size)
         for i in bytes.indices {
-            state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
-            bytes[i] = UInt8(truncatingIfNeeded: state >> 56)
+            // The sum of four uniforms is close to a bell curve (mean 2, standard deviation 0.577).
+            let bell = (uniform() + uniform() + uniform() + uniform() - 2) / 0.577
+            bytes[i] = UInt8(max(0, min(1, mean + bell * spread)) * 255)
         }
         guard let provider = CGDataProvider(data: Data(bytes) as CFData) else { return nil }
         return CGImage(width: size, height: size, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: size,
                        space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
-                       provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
     }()
 }
