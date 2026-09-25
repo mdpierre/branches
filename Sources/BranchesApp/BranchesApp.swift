@@ -49,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Needed when launched as a bare executable (`swift run`); harmless in a bundle.
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        Notifier.shared.install()
 
         // `--screenshot <path.png> [--menu-screenshot <path.png>]`: render the demo window (and
         // the menu bar panel) to PNGs and quit. Used for the README.

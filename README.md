@@ -14,6 +14,10 @@ Branches also lives in the menu bar. The icon shows a count when something needs
 
 <p align="center"><img src="docs/images/menubar.png" width="340" alt="The Branches menu bar panel listing sessions by urgency"></p>
 
+## Notifications (optional)
+
+Open `⋯` → *Notify me when a session…* and turn on **Needs me** and/or **Finishes a turn**. macOS asks for permission the first time. Clicking a notification jumps to the session. A "needs you" banner clears itself once the session moves on. Both are off by default.
+
 ## Status words
 
 | | Status | Meaning |

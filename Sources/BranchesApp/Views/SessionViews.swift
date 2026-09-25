@@ -134,11 +134,7 @@ struct SessionRowView: View {
         let s = session
         switch s.status.display {
         case .needsYou:
-            switch s.status.attention {
-            case .error: return "Stopped with an error"
-            case .input: return waitingText(s.waitingFor)
-            default: return s.activity.map { "\($0) · waiting for approval" } ?? "Waiting for approval"
-            }
+            return s.needsYouText
         case .working:
             return s.activity ?? "Working"
         case .ended:
@@ -147,12 +143,6 @@ struct SessionRowView: View {
             if s.status.confidence == .unknown { return "No recent activity" }
             return hostLine ?? s.lastPrompt.map { "Last: \($0)" } ?? abbreviate(s.cwd)
         }
-    }
-
-    private func waitingText(_ reason: String?) -> String {
-        guard let reason, !reason.isEmpty else { return "Waiting for you" }
-        if reason.lowercased() == "input needed" { return "Waiting for your answer" }
-        return reason.prefix(1).uppercased() + reason.dropFirst()
     }
 
     private var hostLine: String? {

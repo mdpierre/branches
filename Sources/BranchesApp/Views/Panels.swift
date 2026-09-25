@@ -47,6 +47,23 @@ struct SettingsPopover: View {
 
             Divider()
 
+            Text("Notify me when a session…").font(Typo.captionEmphasized).foregroundStyle(.secondary)
+            Toggle("Needs me", isOn: $model.notifyNeedsYou)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .disabled(!Notifier.shared.isAvailable)
+            Toggle("Finishes a turn", isOn: $model.notifyDone)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .disabled(!Notifier.shared.isAvailable)
+            if !Notifier.shared.isAvailable {
+                Text("Notifications need the bundled app (scripts/bundle.sh).")
+                    .font(Typo.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Divider()
+
             Text("Watching").font(Typo.captionEmphasized).foregroundStyle(.secondary)
             ForEach(model.snapshot.diagnostics, id: \.provider) { d in
                 VStack(alignment: .leading, spacing: 2) {

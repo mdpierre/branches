@@ -9,7 +9,8 @@ Where the build differs from the plan:
 - **The Claude hook (M5) is not needed.** Experiment E1 showed that Claude writes `status: "waiting"` and a `waitingFor` reason ("permission prompt", "input needed", "dialog open", …) to its own status file whenever it's waiting for you. Branches reads that directly. The 6 s "pending tool" guess is now only a fallback for sessions without a status file.
 - **Codex PID** is matched by working directory against running `codex` processes, because Codex doesn't record its PID (experiment E3 is still open).
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
-- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate), the menu-bar extra, and tmux pane focusing.
+- **Added after v0.1:** a menu bar icon with a "needs you" count and drop-down panel, plus optional notifications (needs you / finished a turn).
+- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate), tmux pane focusing, and a visual styling pass (the user will send direction).
 
 ## The planning package
 | File | Covers (deliverable #) |

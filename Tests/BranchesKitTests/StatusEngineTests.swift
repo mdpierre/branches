@@ -158,3 +158,47 @@ final class PrivacyGuardTests: XCTestCase {
         }
     }
 }
+
+final class StatusTransitionsTests: XCTestCase {
+    let now = Date(timeIntervalSince1970: 1_790_000_000)
+
+    private func snap(_ id: String, _ display: DisplayStatus, since: TimeInterval = 0, parent: String? = nil) -> SessionSnapshot {
+        SessionSnapshot(
+            id: SessionKey(.claude, id), projectName: "p", projectPath: "/p", cwd: "/p", title: "t",
+            status: StatusResult(display, .reported, since: now + since, reason: "test"),
+            parent: parent.map { SessionKey(.claude, $0) }, lastActivityAt: now
+        )
+    }
+
+    func testStartingToNeedYouFiresOnce() {
+        let before = StatusTransitions.seen([snap("a", .working)])
+        let events = StatusTransitions.detect(previous: before, current: [snap("a", .needsYou)])
+        XCTAssertEqual(events.map(\.kind), [.startedNeedingYou])
+        let again = StatusTransitions.detect(previous: StatusTransitions.seen([snap("a", .needsYou)]), current: [snap("a", .needsYou)])
+        XCTAssertTrue(again.isEmpty)
+    }
+
+    func testWorkingToDoneReportsTurnStart() {
+        let before = StatusTransitions.seen([snap("a", .working, since: -90)])
+        let events = StatusTransitions.detect(previous: before, current: [snap("a", .done)])
+        XCTAssertEqual(events.map(\.kind), [.finished(workingSince: now - 90)])
+    }
+
+    func testIdleToDoneIsNotAFinish() {
+        // e.g. launching mid-session: nothing was seen working.
+        let events = StatusTransitions.detect(previous: StatusTransitions.seen([snap("a", .idle)]), current: [snap("a", .done)])
+        XCTAssertTrue(events.isEmpty)
+    }
+
+    func testLeavingNeedsYouClearsBanner() {
+        let events = StatusTransitions.detect(previous: StatusTransitions.seen([snap("a", .needsYou)]), current: [snap("a", .working)])
+        XCTAssertEqual(events.map(\.kind), [.stoppedNeedingYou])
+    }
+
+    func testNewSessionsAndSubagentsAreIgnored() {
+        XCTAssertTrue(StatusTransitions.detect(previous: [:], current: [snap("a", .needsYou)]).isEmpty)
+        let before = StatusTransitions.seen([snap("parent", .working)])
+        let events = StatusTransitions.detect(previous: before, current: [snap("parent", .working), snap("child", .needsYou, parent: "parent")])
+        XCTAssertTrue(events.isEmpty)
+    }
+}

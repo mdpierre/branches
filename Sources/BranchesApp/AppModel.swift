@@ -34,6 +34,14 @@ final class AppModel {
     }
     static let menuBarKey = "showMenuBarIcon"
 
+    /// Opt-in notifications. Turning one on asks macOS for permission.
+    var notifyNeedsYou: Bool {
+        didSet { persistNotificationSetting(notifyNeedsYou, key: "notifyNeedsYou", oldValue: oldValue) }
+    }
+    var notifyDone: Bool {
+        didSet { persistNotificationSetting(notifyDone, key: "notifyDone", oldValue: oldValue) }
+    }
+
     let store = SessionStore()
     private var toastTask: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
@@ -43,6 +51,20 @@ final class AppModel {
         UserDefaults.standard.register(defaults: [Self.menuBarKey: true])
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
         showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
+        notifyNeedsYou = UserDefaults.standard.bool(forKey: "notifyNeedsYou")
+        notifyDone = UserDefaults.standard.bool(forKey: "notifyDone")
+    }
+
+    private func persistNotificationSetting(_ on: Bool, key: String, oldValue: Bool) {
+        UserDefaults.standard.set(on, forKey: key)
+        guard on, !oldValue else { return }
+        Task {
+            if await !Notifier.shared.requestPermission() {
+                UserDefaults.standard.set(false, forKey: key)
+                if key == "notifyNeedsYou" { notifyNeedsYou = false } else { notifyDone = false }
+                show("Allow notifications for Branches in System Settings › Notifications.")
+            }
+        }
     }
 
     /// `--demo` (or `--screenshot`) shows made-up sessions instead of watching the real ones.
@@ -65,6 +87,7 @@ final class AppModel {
             await store.start()
             for await next in store.updates {
                 self.snapshot = next
+                Notifier.shared.process(next, needsYou: self.notifyNeedsYou, done: self.notifyDone)
             }
         }
         let center = NSWorkspace.shared.notificationCenter
