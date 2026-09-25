@@ -34,6 +34,13 @@ struct BranchesApp: App {
                 Toggle("Show Ended Sessions", isOn: $model.showEnded)
             }
         }
+
+        MenuBarExtra(isInserted: $model.showMenuBarIcon) {
+            MenuBarPanel().environment(model)
+        } label: {
+            MenuBarLabel().environment(model)
+        }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -43,22 +50,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
-        // `--screenshot <path.png>`: render the demo window to a PNG and quit (used for the README).
+        // `--screenshot <path.png> [--menu-screenshot <path.png>]`: render the demo window (and
+        // the menu bar panel) to PNGs and quit. Used for the README.
         let args = CommandLine.arguments
-        if let i = args.firstIndex(of: "--screenshot"), i + 1 < args.count {
-            let path = args[i + 1]
+        func value(after flag: String) -> URL? {
+            guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
+            return URL(fileURLWithPath: args[i + 1])
+        }
+        if let url = value(after: "--screenshot") {
+            NSApp.appearance = NSAppearance(named: .darkAqua) // dark is the primary theme
+            let menuURL = value(after: "--menu-screenshot")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                Self.capture(to: URL(fileURLWithPath: path))
+                if let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) {
+                    window.setContentSize(NSSize(width: 460, height: 532))
+                    Self.capture(window.contentView?.superview ?? window.contentView, to: url)
+                }
+                if let menuURL, let model = AppModel.current {
+                    let host = NSHostingView(rootView: MenuBarPanel().environment(model).preferredColorScheme(.dark))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 340, height: 400),
+                                         styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSAppearance(named: .darkAqua)
+                    panel.contentView = host
+                    panel.setContentSize(host.fittingSize)
+                    panel.orderFront(nil)
+                    Self.capture(host, to: menuURL, background: NSColor(srgbRed: 0.16, green: 0.17, blue: 0.16, alpha: 1))
+                }
                 NSApp.terminate(nil)
             }
         }
     }
 
     @MainActor
-    private static func capture(to url: URL) {
-        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }),
-              let view = window.contentView?.superview ?? window.contentView else { return }
-        window.setContentSize(NSSize(width: 460, height: 532))
+    private static func capture(
+        _ view: NSView?, to url: URL,
+        background: NSColor = NSColor(srgbRed: 0x14 / 255, green: 0x16 / 255, blue: 0x13 / 255, alpha: 1)
+    ) {
+        guard let view else { return }
         view.layoutSubtreeIfNeeded()
         view.displayIfNeeded()
         // Always render at 2x so the image is crisp regardless of the current display.
@@ -75,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let image = NSImage(size: size, flipped: false) { rect in
             let clip = NSBezierPath(roundedRect: rect, xRadius: 12, yRadius: 12)
             clip.addClip()
-            NSColor(srgbRed: 0x14 / 255, green: 0x16 / 255, blue: 0x13 / 255, alpha: 1).setFill()
+            background.setFill()
             rect.fill()
             rep.draw(in: rect)
             return true
@@ -94,5 +121,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         try? png.write(to: url)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    /// With the menu bar icon on, closing the window keeps Branches watching in the menu bar.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        !UserDefaults.standard.bool(forKey: AppModel.menuBarKey)
+    }
 }

@@ -29,19 +29,33 @@ final class AppModel {
     var showEnded: Bool {
         didSet { UserDefaults.standard.set(showEnded, forKey: "showEnded") }
     }
+    var showMenuBarIcon: Bool {
+        didSet { UserDefaults.standard.set(showMenuBarIcon, forKey: Self.menuBarKey) }
+    }
+    static let menuBarKey = "showMenuBarIcon"
 
     let store = SessionStore()
     private var toastTask: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
+    private var started = false
 
     init() {
+        UserDefaults.standard.register(defaults: [Self.menuBarKey: true])
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
+        showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
     }
 
     /// `--demo` (or `--screenshot`) shows made-up sessions instead of watching the real ones.
     static let isDemo = CommandLine.arguments.contains("--demo") || CommandLine.arguments.contains("--screenshot")
 
+    /// The running app's model (for the app delegate: screenshots, notification clicks).
+    static weak var current: AppModel?
+
+    /// Safe to call from every scene; only the first call starts observing.
     func start() {
+        guard !started else { return }
+        started = true
+        Self.current = self
         if Self.isDemo {
             snapshot = DemoData.snapshot()
             return

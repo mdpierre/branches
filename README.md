@@ -8,6 +8,12 @@ Branches is a small, free, open-source Mac app that shows every Claude Code and 
 
 It **observes the workflow you already have**. Keep using your terminal, your agent CLI, tmux and your usual launch habits. Branches doesn't launch, prompt or control anything, and it needs no setup.
 
+## Menu bar
+
+Branches also lives in the menu bar. The icon shows a count when something needs you, and clicking it lists every live session. Click one to jump to it. With the menu bar icon on, closing the window keeps Branches watching. You can turn it off in the `⋯` settings.
+
+<p align="center"><img src="docs/images/menubar.png" width="340" alt="The Branches menu bar panel listing sessions by urgency"></p>
+
 ## Status words
 
 | | Status | Meaning |
@@ -73,7 +79,7 @@ The design docs are in [`docs/`](docs/00-start-here.md).
 ## Contributing
 
 - `swift build && swift test`
-- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --screenshot docs/images/screenshot.png` regenerates the README image.
+- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --screenshot docs/images/screenshot.png --menu-screenshot docs/images/menubar.png` regenerates the README images.
 - Read [CLAUDE.md](CLAUDE.md) for the project's hard rules, which apply to humans too.
 - To add a provider (Gemini CLI, OpenCode, …), see [Sources/BranchesKit/Providers/README.md](Sources/BranchesKit/Providers/README.md).
 

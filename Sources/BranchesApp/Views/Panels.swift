@@ -40,6 +40,10 @@ struct SettingsPopover: View {
             Toggle("Show ended sessions", isOn: $model.showEnded)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+            Toggle("Show in menu bar", isOn: $model.showMenuBarIcon)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .help("Keeps Branches running in the menu bar when you close the window")
 
             Divider()
 
