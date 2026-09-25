@@ -2,15 +2,23 @@
 
 Deliverables 8 and 9. The goal: *a refined developer tool interpreted through forest materials*. The design is calm, native and dense. It is **not** a cartoon forest.
 
+**Forest v1 (2026-09-24).** The look was made more themed: a treeline header, plant status glyphs, twig connectors and a dark forest-floor background. The rule that keeps it a developer tool: **every drawing carries information or sits behind the content**, and the status words stay literal next to every glyph. Everything in the app is drawn in code. The app icon is the only image asset.
+
 ---
 
 ## 8. UI specification
 
 ### Window
-- A single window, default **380 × 560 pt**, min 320 × 280, resizable, remembers its frame.
-- Hidden title bar (`.windowStyle(.hiddenTitleBar)`) with a `.sidebar`-style `NSVisualEffectView` material behind a charcoal tint.
-- Top strip (28 pt): the wordmark `BRANCHES` in small caps, tracking +8%, `text.secondary`. On the right, a summary chip such as **`2 need you · 3 working`** (click it to cycle the selection through "Needs you" rows).
+- A single window, default **400 × 560 pt**, resizable, remembers its frame.
+- Hidden title bar (`.windowStyle(.hiddenTitleBar)`). The content runs under the title bar (`.ignoresSafeArea()`).
+- **Background:** the forest floor. It's a vertical gradient: `forest.top` behind the header, easing to `forest.mid`, then to `forest.bottom` near-black at the bottom. On top sit four soft, dappled-light patches and a fine grain (a tiled noise image in screen blend at 7%: soft noise around 37% gray with a ±9% spread, one pixel per point, matched to the mockup's SVG fractal noise). All of it is subtle, and the text contrast is unchanged.
+- **Treeline header** (`ForestHeader`, 128 pt at rest). A sky gradient sits behind three layers of pines (far, mid and near) drawn with a seeded generator, so the same width always gives the same forest. A wider window grows more trees rather than stretching them. The sky shows a moon and stars at dusk and night.
+  - **Time of day:** Dawn / Day / Dusk / Night. Each is a palette only; the shapes never change. *Auto* (the default) follows fixed clock hours: 5–9 dawn, 9–17 day, 17–20 dusk, otherwise night. It uses no location. You can pin a time in Settings. Light mode uses one pale-morning palette.
+  - **Fireflies:** one per "Needs you" session (oldest first, max 5), glowing in the treeline. An error is a rust firefly. They add no new information (the chip has the count); they make waiting sessions visible at a glance, even from across the room.
+  - **Scroll-to-shrink:** as the list scrolls, the header shrinks from 128 pt to a 40 pt strip of treetops over the first 88 pt. The layers move at different rates (parallax: sky 30, far 70, mid 80, near 88), and a hairline appears under it. Windows shorter than 400 pt start shrunk. With Reduce Motion, it snaps instead of easing.
+- **Top strip** (overlaid on the header): the wordmark `BRANCHES`, tracking +8%. On the right, a summary chip such as **`🏮 2 need you · 🌱 3 working`** (click it to cycle the selection through "Needs you" rows), plus a `⋯` settings button. Both sit on `chip` capsules so they read over the sky. Once the header shrinks, the strip moves beside the traffic lights.
 - Body: a scrolling list of **project groups**.
+- **Menu bar panel:** the same scene at a smaller size: a 60 pt strip of the treeline (the header shrunk most of the way, with the moon and fireflies nudged to stay in view), with the wordmark and summary chip on top. Below it is a flat list of sessions with their plant glyphs, over the forest background.
 - There is no sidebar, no tabs, no toolbar and no second screen. Settings = a small popover from a `⋯` button (hook install/remove, show ended sessions, diagnostics).
 
 ### Project group
@@ -32,34 +40,37 @@ personal-ai                               ~/code/personal-ai
 ### Session row (two lines, 44 pt tall)
 | Slot | Content |
 |---|---|
-| Branch connector | 1 pt vertical `bark` line down the left of the group, with a 10 pt horizontal elbow into each row's node (`├` / `└`). Drawn with a `Path` in the row's leading 20 pt, not a canvas. |
-| Status node | 10 pt, at the end of the elbow (see node table). |
+| Branch connector | A `trunk`-colored trunk down the left of the group that **tapers**: 2.6 pt at the first row to about 1.5 pt at the last (ended rows are 1.4 pt). Each row gets a **twig** that curves up from the trunk into its glyph, instead of a square elbow. Drawn with a `Path` in the row's leading 22 pt, not a canvas. |
+| Status glyph | A 20 pt plant glyph at the end of the twig (see the glyph table). |
 | Provider | `Claude` / `Codex` in `caption.emphasized`, `text.secondary`. A 60 pt fixed column. |
 | Title | `body`, `text.primary`, 1 line, truncates at the tail. |
 | Status + time | Right-aligned. `Working · 1m 42s` / `Done · 3m ago`. Monospaced digits. |
 | Line 2 | Activity (`caption`, `text.secondary`). Falls back to the host app (`Terminal · ttys003`) when there is no activity. |
 | Subagents | Indented 16 pt under the parent, with their own smaller elbow (the "fork"). Only shown while Working or Needs you. Otherwise shown as a `+2 subagents` suffix. |
 
-### Status nodes
-| Status | Node | Row treatment |
+### Status glyphs
+Each status is a small plant, drawn in a 20 × 20 pt box (`StatusGlyphs.swift`). The status word beside it is always shown, so the glyph is never the only signal.
+
+| Status | Glyph | Row treatment |
 |---|---|---|
-| Working | filled `leaf` dot + a slow 2.4 s "breathing" glow (opacity 0.35→0.8) | normal |
-| Needs you | 10 pt `amber` ring with a 4 pt filled center; no animation after a single 0.3 s scale-in | title in `text.primary`; status text in `amber` |
-| Needs you (error) | same ring in `rust` with a small `!` | status text `rust` |
-| Done | hollow `cream` ring | normal |
-| Idle | 6 pt `moss` dot | title `text.secondary` |
+| Working | a **sprout** (stem + two leaves, `leaf` / `leaf.light`) that sways ±6° over 1.6 s | normal |
+| Needs you | a lit **lantern**: an `amber` core in two soft halos. Still. | title in `text.primary`; status text in `amber` |
+| Needs you (error) | an **ember**: a `rust` disc with a `!` | status text `rust` |
+| Done | a full **leaf**, `cream` outline with a midrib | normal |
+| Idle | a **seed**, `seed` green, tilted | title `text.secondary` |
 | Unknown / no recent activity | dotted ring, `text.tertiary` | "No recent activity" |
-| Ended | none (the elbow ends in a short cap) | row at 45% opacity |
+| Ended | a **fallen leaf**, turned over, `text.tertiary` | row at 50% opacity |
 
 ### States
 - **Hover:** row background `surface.hover` (cream at 4%). Right edge shows a `↩︎` jump affordance and a `⋯` menu.
-- **Selected:** background `moss` at 22% plus a 2 pt `leaf` bar on the left. Keyboard focus ring follows the system accent only when full keyboard access is on.
+- **Selected:** background `surface.selected` (the row's rounded fill, 8 pt corners, reaching back behind the glyph). No side bar. Keyboard focus ring follows the system accent only when full keyboard access is on.
 - **Pressed / jumping:** a 150 ms flash of the selection color, then the target app comes forward. If the jump fell back to L3/L4, a small toast appears at the bottom: "Opened folder — exact tab not available for Warp" / "Copied `claude --resume …`".
 
 ### Animations
-- Only three animations exist: the Working breathe, the Needs-you scale-in, and row insert/remove (`.opacity.combined(with: .move(edge: .top))`, 200 ms).
-- Status changes crossfade the node (150 ms). No bouncing, no growing vines.
-- All animation respects **Reduce Motion**: the breathe becomes a static bright dot.
+- **Ambient** motion (only two kinds): the Working sprout's sway, and the fireflies' flicker (opacity 0.45↔1, 1.5 s, staggered). Both are Core Animation layer animations, so they cost the app no CPU. Never use a SwiftUI `repeatForever` for them; it re-lays out every frame.
+- **Transitions:** row insert/remove (`.opacity.combined(with: .move(edge: .top))`, 200 ms); the glyph crossfades on a status change (150 ms); the header shrinks with scroll (it follows the scroll position, with no timed animation).
+- No bouncing, no growing vines, nothing that moves because time passed, except the sprout and the fireflies.
+- All of it respects **Reduce Motion**: the sprout is still, the fireflies stop flickering and the header snaps between rest and shrunk.
 
 ### Empty & first-run states
 - **Nothing found:** centered, `text.secondary`: "No coding agents running." Below it: "Branches watches Claude Code and Codex automatically. Start one in any terminal." Plus a small line listing the watched folders and whether each exists (✓ / not found).
@@ -89,20 +100,29 @@ Needs-you node and status text → project names → session titles → Working 
 ### Semantic colors (dark is the primary theme; light is supported)
 | Token | Dark | Light | Use |
 |---|---|---|---|
-| `bg.window` | `#141613` (charcoal-moss) | `#F4F1EA` | window tint over the material |
+| `forest.top` | `#17211A` | `#E9EDE2` | background under the header; the near treeline |
+| `forest.mid` | `#111712` | `#F0EFE7` | background middle |
+| `forest.bottom` | `#0B0D0B` | `#F4F1EA` | background bottom |
 | `surface.hover` | cream 4% | bark 6% | row hover |
-| `surface.selected` | `#2F4A34` @ 22% | `#3D6B45` @ 14% | selection |
+| `surface.selected` | `#2F4A34` @ 45% | `#3D6B45` @ 16% | selection |
 | `text.primary` | `#ECE6D8` (warm cream) | `#1E211C` | titles |
 | `text.secondary` | `#A9A391` | `#5C5A50` | provider, activity |
 | `text.tertiary` | `#6E6A5E` | `#8E8A7E` | paths, ended |
-| `bark` | `#5A4E42` | `#A89684` | branch connectors |
-| `moss` | `#3F5A43` | `#6F8F6F` | idle node, selection base |
-| `leaf` (live) | `#7FCF7A` | `#2F8F3A` | Working node — **the only saturated green, used sparingly** |
-| `amber` (attention) | `#E0A94A` | `#B7791F` | Needs you |
-| `rust` (error) | `#C8664A` | `#A4472E` | error variant |
-| `cream` | `#ECE6D8` | `#3C3A33` | Done ring |
+| `bark` | `#5A4E42` | `#A89684` | hairlines |
+| `trunk` | `#6A5A47` | `#A08A70` | trunk and twigs |
+| `moss` | `#3F5A43` | `#6F8F6F` | selection base |
+| `seed` | `#5E8062` | `#6F8F6F` | Idle seed |
+| `leaf` (live) | `#7FCF7A` | `#2F8F3A` | Working sprout — **the only saturated green, used sparingly** |
+| `leaf.light` | `#9BDB93` | `#55A95E` | the sprout's second leaf |
+| `amber` (attention) | `#E0A94A` | `#B7791F` | Needs you: lantern halo, status text, fireflies |
+| `lantern.core` | `#F0BE62` | `#C98A22` | the lantern's bright center |
+| `rust` (error) | `#C8664A` | `#A4472E` | error variant: ember, error fireflies |
+| `cream` | `#ECE6D8` | `#3C3A33` | Done leaf |
+| `chip` | `#0B0E0C` @ 60% | white @ 65% | capsules over the header scene |
 
-Put all of these in `DesignSystem/Palette.swift` as `Color` extensions backed by an asset-free dynamic `NSColor(name:dynamicProvider:)`, so no asset catalog is needed.
+The header's sky and treeline colors are fixed per time of day, not light/dark tokens. They live in `ScenePalette` in `DesignSystem/Forest.swift`, which uses `Palette.hex`.
+
+These live in `DesignSystem/Theme.swift` as `Color` extensions backed by an asset-free dynamic `NSColor(name:dynamicProvider:)`, so no asset catalog is needed.
 
 ### Typography (SF Pro, system sizes)
 - `title`: 13 pt semibold (project names)
@@ -112,12 +132,16 @@ Put all of these in `DesignSystem/Palette.swift` as `Color` extensions backed by
 - The wordmark is 11 pt semibold, small caps, tracking +8%.
 
 ### Spacing & shape
-- 4 pt grid. Row padding 8 pt vertical, 12 pt horizontal. Group spacing 16 pt. Connector column 20 pt.
-- Corner radius: rows 6 pt, popover 10 pt, toast 8 pt.
-- Borders: none, except a 0.5 pt `bark` @ 40% separator under the top strip.
+- 4 pt grid. Row padding 8 pt vertical, 12 pt horizontal. Group spacing 14 pt. Connector column 22 pt, glyph column 20 pt.
+- Corner radius: rows 8 pt, popover 10 pt, toast 8 pt; chips are capsules.
+- Borders: none, except the hairline under the shrunk header (`bark` @ 50%).
 
 ### Animation principles
-Living, not busy. There is one ambient motion (the breathe) and everything else is a transition under 200 ms. Nothing animates while idle. This keeps CPU near zero.
+Living, not busy. Ambient motion only ever means something: a sprout sways because an agent is working, and a firefly glows because one is waiting. Everything else is a transition under 200 ms. With nothing working or waiting, nothing moves. Ambient motion runs in Core Animation, so CPU stays near zero.
 
 ### Icon direction
-The app icon is an abstract single stroke that forks once and ends in a small bright node, drawn in cream on deep moss. No leaves, no trees, no wood grain. In-app glyphs use SF Symbols only (`arrow.turn.down.left`, `ellipsis`, `folder`, `doc.on.doc`, `exclamationmark`).
+The app icon is a warm brown trunk that forks into two branches with leaves. One branch ends in a green node (working) and the other in a glowing red node (needs you). It sits on a deep forest-green tile with faint fireflies. The master is `Resources/AppIcon.png` (1024 × 1024, on the standard 824 pt tile grid). `scripts/make-icon.sh` builds `AppIcon.icns` from it.
+
+The menu bar icon is the same fork and two nodes without the leaves, drawn in code (`MenuBarGlyph`, 15 × 16 pt). Normally it is a template image, so it follows the menu bar's light/dark style. When a session needs you, it switches to the accent colors (brown trunk, green and red nodes) and shows the count beside it.
+
+The status glyphs and the header are drawn in code (see above). Everything else uses SF Symbols (`arrow.turn.down.left`, `ellipsis`, `folder`, `doc.on.doc`). Keep new in-app drawings to the same rule: flat shapes, forest palette, no gradients on glyphs beyond soft halos, and no wood grain or cartoon faces.

@@ -47,6 +47,18 @@ struct SettingsPopover: View {
 
             Divider()
 
+            Text("Time of day").font(Typo.captionEmphasized).foregroundStyle(.secondary)
+            Picker("Time of day", selection: $model.sceneTime) {
+                Text("Auto").tag("auto")
+                ForEach(TimeOfDay.allCases) { Text($0.label).tag($0.rawValue) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .controlSize(.small)
+            .help("Auto follows your clock: dawn 5–9, day 9–17, dusk 17–20, night after that")
+
+            Divider()
+
             Text("Notify me when a session…").font(Typo.captionEmphasized).foregroundStyle(.secondary)
             Toggle("Needs me", isOn: $model.notifyNeedsYou)
                 .toggleStyle(.switch)

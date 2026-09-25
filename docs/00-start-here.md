@@ -10,7 +10,8 @@ Where the build differs from the plan:
 - **Codex PID** is matched by working directory against running `codex` processes, because Codex doesn't record its PID (experiment E3 is still open).
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
 - **Added after v0.1:** a menu bar icon with a "needs you" count and drop-down panel, plus optional notifications (needs you / finished a turn).
-- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate), tmux pane focusing, and a visual styling pass (the user will send direction).
+- **Forest v1 visual pass (2026-09-25):** treeline header with a time-of-day sky and "needs you" fireflies, plant status glyphs, twig connectors and a forest-floor background. See `04-design.md`. `--screenshot` also takes `--window-size WxH`, `--scene dawn|day|dusk|night`, `--scroll N` and `--menu-bar-screenshot <prefix>` (captures the real menu bar icon and the drop-down it opens).
+- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate) and tmux pane focusing.
 
 ## The planning package
 | File | Covers (deliverable #) |

@@ -16,11 +16,13 @@ branches/
 ├── docs/                             # this planning package
 ├── scripts/
 │   ├── bundle.sh                     # swift build -c release → Branches.app (+ codesign)
+│   ├── make-icon.sh                  # Resources/AppIcon.png → AppIcon.icns
 │   ├── notarize.sh
 │   └── probes/                       # Phase 0 throwaway experiments (kept for reference)
 ├── Resources/
 │   ├── Info.plist
 │   ├── Branches.entitlements
+│   ├── AppIcon.png                   # 1024 × 1024 icon master
 │   ├── AppIcon.icns
 │   └── hooks/branches-claude-hook.sh
 ├── Sources/

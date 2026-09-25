@@ -34,6 +34,11 @@ final class AppModel {
     }
     static let menuBarKey = "showMenuBarIcon"
 
+    /// The header scene's time of day: "auto" (follows the clock) or a `TimeOfDay` raw value.
+    var sceneTime: String {
+        didSet { UserDefaults.standard.set(sceneTime, forKey: "sceneTime") }
+    }
+
     /// Opt-in notifications. Turning one on asks macOS for permission.
     var notifyNeedsYou: Bool {
         didSet { persistNotificationSetting(notifyNeedsYou, key: "notifyNeedsYou", oldValue: oldValue) }
@@ -53,6 +58,17 @@ final class AppModel {
         showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
         notifyNeedsYou = UserDefaults.standard.bool(forKey: "notifyNeedsYou")
         notifyDone = UserDefaults.standard.bool(forKey: "notifyDone")
+        // `--scene dawn|day|dusk|night` (screenshots) overrides the setting without saving it.
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--scene"), i + 1 < args.count {
+            sceneTime = args[i + 1]
+        } else {
+            sceneTime = UserDefaults.standard.string(forKey: "sceneTime") ?? "auto"
+        }
+    }
+
+    func timeOfDay(at date: Date) -> TimeOfDay {
+        TimeOfDay(rawValue: sceneTime) ?? .at(date)
     }
 
     private func persistNotificationSetting(_ on: Bool, key: String, oldValue: Bool) {
@@ -143,6 +159,15 @@ final class AppModel {
 
     var needsYouCount: Int { snapshot.sessions.filter { $0.status.display == .needsYou }.count }
     var workingCount: Int { snapshot.sessions.filter { $0.status.display == .working }.count }
+
+    /// One firefly per session that needs you, oldest first (true = waiting because of an error).
+    var fireflies: [Bool] {
+        snapshot.sessions
+            .filter { $0.status.display == .needsYou }
+            .sorted { $0.status.since < $1.status.since }
+            .prefix(5)
+            .map { $0.status.attention == .error }
+    }
 
     private static func order(_ a: SessionSnapshot, _ b: SessionSnapshot) -> Bool {
         if a.status.display != b.status.display { return a.status.display < b.status.display }

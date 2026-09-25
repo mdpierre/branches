@@ -28,7 +28,8 @@ struct ProjectGroupView: View {
             ForEach(Array(group.rows.enumerated()), id: \.element.id) { index, row in
                 let isLast = index == group.rows.count - 1 && group.endedCount == 0
                 let nextIsChild = index + 1 < group.rows.count && group.rows[index + 1].depth > row.depth
-                SessionRowView(row: row, isLast: isLast, hasChildBelow: nextIsChild, trunkContinues: !isLast)
+                let taper = CGFloat(index) / CGFloat(max(group.rows.count, 1))
+                SessionRowView(row: row, isLast: isLast, hasChildBelow: nextIsChild, trunkWidth: 2.6 - taper * 1.1)
                     .id(row.id)
             }
 
@@ -38,7 +39,7 @@ struct ProjectGroupView: View {
                     else { model.expandedEnded.insert(group.path) }
                 } label: {
                     HStack(spacing: 0) {
-                        BranchConnector(depth: 0, isLast: true, hasChildBelow: false)
+                        BranchConnector(depth: 0, isLast: true, hasChildBelow: false, trunkWidth: 1.4)
                             .frame(width: Metrics.connectorWidth, height: 24)
                         Text("\(group.endedCount) ended")
                             .font(Typo.caption)
@@ -61,7 +62,7 @@ struct SessionRowView: View {
     let row: ProjectGroup.Row
     let isLast: Bool
     let hasChildBelow: Bool
-    let trunkContinues: Bool
+    let trunkWidth: CGFloat
     @State private var hovering = false
 
     private var session: SessionSnapshot { row.session }
@@ -70,7 +71,7 @@ struct SessionRowView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            BranchConnector(depth: row.depth, isLast: isLast, hasChildBelow: hasChildBelow)
+            BranchConnector(depth: row.depth, isLast: isLast, hasChildBelow: hasChildBelow, trunkWidth: trunkWidth)
                 .frame(width: Metrics.connectorWidth + indent)
             StatusNode(status: session.status)
                 .frame(width: Metrics.nodeColumn, height: Metrics.elbowY * 2)
@@ -112,11 +113,6 @@ struct SessionRowView: View {
             .background(alignment: .leading) {
                 RoundedRectangle(cornerRadius: Metrics.rowCorner)
                     .fill(isSelected ? Palette.selection : hovering ? Palette.hover : .clear)
-                    .overlay(alignment: .leading) {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 1).fill(Palette.leaf).frame(width: 2).padding(.vertical, 6)
-                        }
-                    }
                     .padding(.leading, -Metrics.nodeColumn - 2)
             }
         }
@@ -199,115 +195,53 @@ struct StatusTimeText: View {
     }
 }
 
-// MARK: - Status node
-
-struct StatusNode: View {
-    let status: StatusResult
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        ZStack {
-            switch status.display {
-            case .working:
-                if !reduceMotion {
-                    BreathingGlow(color: NSColor(Palette.leaf)).frame(width: 16, height: 16)
-                }
-                Circle().fill(Palette.leaf).frame(width: 8, height: 8)
-            case .needsYou:
-                let color = Palette.color(for: status)
-                Circle().strokeBorder(color, lineWidth: 2).frame(width: 11, height: 11)
-                if status.attention == .error {
-                    Text("!").font(.system(size: 8, weight: .heavy)).foregroundStyle(color)
-                } else {
-                    Circle().fill(color).frame(width: 4, height: 4)
-                }
-            case .done:
-                Circle().strokeBorder(Palette.cream, lineWidth: 1.5).frame(width: 9, height: 9)
-            case .idle:
-                if status.confidence == .unknown {
-                    Circle()
-                        .strokeBorder(Palette.textTertiary, style: StrokeStyle(lineWidth: 1.2, dash: [1.5, 1.5]))
-                        .frame(width: 9, height: 9)
-                } else {
-                    Circle().fill(Palette.moss).frame(width: 6, height: 6)
-                }
-            case .ended:
-                Capsule().fill(Palette.bark).frame(width: 5, height: 2)
-            }
-        }
-        .animation(.easeInOut(duration: 0.15), value: status.display)
-        .accessibilityLabel(status.display.label)
-    }
-}
-
-/// The "living" pulse behind a working node. Runs as a Core Animation layer animation,
-/// so it costs the app no CPU (a SwiftUI repeatForever animation re-lays out every frame).
-struct BreathingGlow: NSViewRepresentable {
-    let color: NSColor
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        let glow = CALayer()
-        glow.cornerRadius = 8
-        glow.frame = CGRect(x: 0, y: 0, width: 16, height: 16)
-        glow.opacity = 0.22 // resting value, seen in snapshots and before the animation starts
-        view.layer?.addSublayer(glow)
-        let pulse = CABasicAnimation(keyPath: "opacity")
-        pulse.fromValue = 0.08
-        pulse.toValue = 0.4
-        pulse.duration = 1.2
-        pulse.autoreverses = true
-        pulse.repeatCount = .infinity
-        pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        glow.add(pulse, forKey: "breathe")
-        updateColor(glow, view: view)
-        return view
-    }
-
-    func updateNSView(_ view: NSView, context: Context) {
-        if let glow = view.layer?.sublayers?.first { updateColor(glow, view: view) }
-    }
-
-    private func updateColor(_ layer: CALayer, view: NSView) {
-        view.effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer.backgroundColor = color.cgColor
-        }
-    }
-}
-
 // MARK: - Branch connector
 
-/// The trunk runs down the left of a project group; each row gets an elbow into its node.
-/// Subagents fork from their parent's node.
+/// The trunk runs down the left of a project group, thinning toward its last row; each row
+/// gets a twig that curves up into its glyph. Subagents grow from their parent's glyph.
 struct BranchConnector: View {
     let depth: Int
     let isLast: Bool
     let hasChildBelow: Bool
+    /// Trunk thickness for this row (thicker at the top of the group).
+    var trunkWidth: CGFloat = 1.5
+
+    /// How far below the glyph the twig leaves the trunk.
+    private static let twigDrop: CGFloat = 16.5
 
     var body: some View {
         Canvas { ctx, size in
             let trunkX: CGFloat = 8
             let y = Metrics.elbowY
             let nodeX = Metrics.connectorWidth + CGFloat(depth) * 16
-            var path = Path()
-            // Trunk
-            path.move(to: CGPoint(x: trunkX, y: 0))
-            path.addLine(to: CGPoint(x: trunkX, y: isLast && depth == 0 ? y - 4 : size.height))
+            let twigStart = y + Self.twigDrop
+
+            var trunk = Path()
+            trunk.move(to: CGPoint(x: trunkX, y: 0))
+            trunk.addLine(to: CGPoint(x: trunkX, y: isLast && depth == 0 ? twigStart : size.height))
+            ctx.stroke(trunk, with: .color(Palette.trunk), style: StrokeStyle(lineWidth: trunkWidth, lineCap: .round))
+
+            var twig = Path()
             if depth == 0 {
-                // Rounded elbow into the node
-                path.move(to: CGPoint(x: trunkX, y: y - 4))
-                path.addQuadCurve(to: CGPoint(x: trunkX + 4, y: y), control: CGPoint(x: trunkX, y: y))
-                path.addLine(to: CGPoint(x: nodeX - 1, y: y))
+                twig.move(to: CGPoint(x: trunkX, y: twigStart))
+                twig.addCurve(to: CGPoint(x: nodeX + 1, y: y),
+                              control1: CGPoint(x: trunkX, y: y + 7.5),
+                              control2: CGPoint(x: trunkX + 4.5, y: y + 1))
             } else {
-                // Fork from the parent's node column
+                // Grows from the parent's glyph, just above this row.
                 let forkX = Metrics.connectorWidth + Metrics.nodeColumn / 2 + CGFloat(depth - 1) * 16
-                path.move(to: CGPoint(x: forkX, y: 0))
-                path.addLine(to: CGPoint(x: forkX, y: y - 4))
-                path.addQuadCurve(to: CGPoint(x: forkX + 4, y: y), control: CGPoint(x: forkX, y: y))
-                path.addLine(to: CGPoint(x: nodeX - 1, y: y))
+                twig.move(to: CGPoint(x: forkX, y: 0))
+                twig.addCurve(to: CGPoint(x: nodeX + 2, y: y),
+                              control1: CGPoint(x: forkX, y: y * 0.7),
+                              control2: CGPoint(x: forkX + 3, y: y))
             }
-            ctx.stroke(path, with: .color(Palette.bark), lineWidth: 1)
+            if hasChildBelow {
+                // The start of a subagent's twig, down from this row's glyph.
+                let childForkX = Metrics.connectorWidth + Metrics.nodeColumn / 2 + CGFloat(depth) * 16
+                twig.move(to: CGPoint(x: childForkX, y: y + 10))
+                twig.addLine(to: CGPoint(x: childForkX, y: size.height))
+            }
+            ctx.stroke(twig, with: .color(Palette.trunk), style: StrokeStyle(lineWidth: depth == 0 ? 1.5 : 1.2, lineCap: .round))
         }
     }
 }
