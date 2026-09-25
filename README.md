@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/icon.png" width="128" alt="The Branches app icon: a tree that forks into a green node and a red node"></p>
+
 # Branches
 
 **A live activity monitor for your coding agents.**
@@ -10,7 +12,7 @@ It **observes the workflow you already have**. Keep using your terminal, your ag
 
 ## Menu bar
 
-Branches also lives in the menu bar. The icon shows a count when something needs you, and clicking it lists every live session. Click one to jump to it. With the menu bar icon on, closing the window keeps Branches watching. You can turn it off in the `⋯` settings.
+Branches also lives in the menu bar. When something needs you, the icon lights up in color and shows a count, and clicking it lists every live session. Click one to jump to it. With the menu bar icon on, closing the window keeps Branches watching. You can turn it off in the `⋯` settings.
 
 <p align="center"><img src="docs/images/menubar.png" width="340" alt="The Branches menu bar panel listing sessions by urgency"></p>
 
@@ -20,13 +22,17 @@ Open `⋯` → *Notify me when a session…* and turn on **Needs me** and/or **F
 
 ## Status words
 
-| | Status | Meaning |
+Each session ends in a small plant, and the status word is always written beside it.
+
+| Plant | Status | Meaning |
 |---|---|---|
-| ● | **Working** | The agent is doing something right now |
-| ◎ | **Needs you** | Waiting for your approval, or stopped with an error |
-| ○ | **Done** | Finished a turn you haven't looked at yet |
-| · | **Idle** | Alive, and nothing happening |
-| – | **Ended** | The process has exited (double-click to copy the resume command) |
+| Swaying sprout | **Working** | The agent is doing something right now |
+| Glowing lantern (an ember with `!` for an error) | **Needs you** | Waiting for your approval, or stopped with an error |
+| Leaf | **Done** | Finished a turn you haven't looked at yet |
+| Seed | **Idle** | Alive, and nothing happening |
+| Fallen leaf | **Ended** | The process has exited (double-click to copy the resume command) |
+
+A firefly drifts over the treeline for each session that needs you, and the sky follows the time of day (you can pin it in `⋯`).
 
 Hover over any row to see *why* Branches thinks so (e.g. "Working (reported): provider: busy").
 
@@ -83,7 +89,7 @@ The design docs are in [`docs/`](docs/00-start-here.md).
 ## Contributing
 
 - `swift build && swift test`
-- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --screenshot docs/images/screenshot.png --menu-screenshot docs/images/menubar.png` regenerates the README images.
+- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --scene dusk --screenshot docs/images/screenshot.png --menu-screenshot docs/images/menubar.png` regenerates the README screenshots. The app icon master is `Resources/AppIcon.png`; `scripts/make-icon.sh` rebuilds the `.icns` from it.
 - Read [CLAUDE.md](CLAUDE.md) for the project's hard rules, which apply to humans too.
 - To add a provider (Gemini CLI, OpenCode, …), see [Sources/BranchesKit/Providers/README.md](Sources/BranchesKit/Providers/README.md).
 
