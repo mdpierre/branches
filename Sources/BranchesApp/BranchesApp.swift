@@ -51,8 +51,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         Notifier.shared.install()
 
-        // `--screenshot <path.png> [--menu-screenshot <path.png>]`: render the demo window (and
-        // the menu bar panel) to PNGs and quit. Used for the README.
+        // `--screenshot <path.png> [--menu-screenshot <path.png>] [--window-size 460x620] [--scene dusk] [--scroll 120]`:
+        // render the demo window (and the menu bar panel) to PNGs and quit. Used for the README.
         let args = CommandLine.arguments
         func value(after flag: String) -> URL? {
             guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
@@ -61,9 +61,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let url = value(after: "--screenshot") {
             NSApp.appearance = NSAppearance(named: .darkAqua) // dark is the primary theme
             let menuURL = value(after: "--menu-screenshot")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                if let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) {
-                    window.setContentSize(NSSize(width: 460, height: 532))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                // Launched as a bare executable from a shell, SwiftUI sometimes doesn't open the
+                // main window (it depends on whether macOS let the app activate). Stand one in.
+                if Self.mainWindow == nil, let model = AppModel.current { Self.openStandIn(model) }
+                Self.mainWindow?.setContentSize(Self.screenshotSize(args))
+            }
+            if let i = args.firstIndex(of: "--scroll"), i + 1 < args.count, let offset = Double(args[i + 1]) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                    if let view = Self.mainWindow?.contentView,
+                       let scroll = Self.firstScrollView(in: view),
+                       let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                                           wheel1: Int32(-offset), wheel2: 0, wheel3: 0),
+                       let event = NSEvent(cgEvent: wheel) {
+                        // A real scroll-wheel event, so SwiftUI sees the scroll the way it sees a user's.
+                        scroll.scrollWheel(with: event)
+                    }
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                if let window = Self.mainWindow,
+                   !Self.captureOnScreen(window, to: url) {
                     Self.capture(window.contentView?.superview ?? window.contentView, to: url)
                 }
                 if let menuURL, let model = AppModel.current {
@@ -79,6 +97,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.terminate(nil)
             }
         }
+    }
+
+    /// The window as the window server composites it, so Core Animation layers (the fireflies, the
+    /// swaying sprouts) and the list's scroll view are included. Needs Screen Recording permission for
+    /// whatever launched the app; returns false without it, and the caller falls back to `capture`.
+    @MainActor
+    private static func captureOnScreen(_ window: NSWindow, to url: URL) -> Bool {
+        try? FileManager.default.removeItem(at: url)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        process.arguments = ["-x", "-o", "-l", "\(window.windowNumber)", url.path]
+        guard (try? process.run()) != nil else { return false }
+        process.waitUntilExit()
+        return process.terminationStatus == 0 && FileManager.default.fileExists(atPath: url.path)
+    }
+
+    @MainActor private static var standIn: NSWindow?
+
+    /// A window like the SwiftUI one (hidden title bar, content under the traffic lights).
+    @MainActor
+    private static func openStandIn(_ model: AppModel) {
+        let window = NSWindow(
+            contentRect: NSRect(x: 200, y: 200, width: 400, height: 560),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered, defer: false
+        )
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: ContentView().environment(model).task { model.start() })
+        window.makeKeyAndOrderFront(nil)
+        standIn = window
+    }
+
+    /// The Branches window, not the menu bar icon's status-bar window (which is also "visible").
+    @MainActor
+    private static var mainWindow: NSWindow? {
+        NSApp.windows.first { $0.isVisible && $0.styleMask.contains(.titled) }
+    }
+
+    @MainActor
+    private static func firstScrollView(in view: NSView) -> NSScrollView? {
+        if let scroll = view as? NSScrollView { return scroll }
+        for sub in view.subviews { if let found = firstScrollView(in: sub) { return found } }
+        return nil
+    }
+
+    private static func screenshotSize(_ args: [String]) -> NSSize {
+        if let i = args.firstIndex(of: "--window-size"), i + 1 < args.count {
+            let parts = args[i + 1].split(separator: "x").compactMap { Double($0) }
+            if parts.count == 2 { return NSSize(width: parts[0], height: parts[1]) }
+        }
+        return NSSize(width: 460, height: 620)
     }
 
     @MainActor
