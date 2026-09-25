@@ -120,27 +120,9 @@ struct ContentView: View {
     }
 
     @ViewBuilder private var summaryChip: some View {
-        let waiting = model.needsYouCount
-        let working = model.workingCount
-        if waiting + working > 0 {
+        if model.needsYouCount + model.workingCount > 0 {
             Button { model.cycleNeedsYou() } label: {
-                HStack(spacing: 4) {
-                    if waiting > 0 {
-                        LanternShape().scaleEffect(0.65).frame(width: 13, height: 13)
-                        Text("\(waiting) need\(waiting == 1 ? "s" : "") you").foregroundStyle(Palette.amber)
-                    }
-                    if waiting > 0 && working > 0 { Text("·").foregroundStyle(Palette.textTertiary) }
-                    if working > 0 {
-                        SproutShape().scaleEffect(0.65).frame(width: 13, height: 13)
-                        Text("\(working) working").foregroundStyle(Palette.textSecondary)
-                    }
-                }
-                .font(Typo.captionEmphasized)
-                .monospacedDigit()
-                .padding(.leading, 6)
-                .padding(.trailing, 9)
-                .frame(height: 22)
-                .background(Capsule().fill(Palette.chip))
+                SummaryChip(waiting: model.needsYouCount, working: model.workingCount)
             }
             .buttonStyle(.plain)
             .help("Tab cycles through sessions that need you")
@@ -181,6 +163,32 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
                 .animation(.easeOut(duration: 0.2), value: model.toast)
         }
+    }
+}
+
+/// `🏮 2 need you · 🌱 3 working`, on a capsule that reads over the treeline.
+struct SummaryChip: View {
+    let waiting: Int
+    let working: Int
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if waiting > 0 {
+                LanternShape().scaleEffect(0.65).frame(width: 13, height: 13)
+                Text("\(waiting) need\(waiting == 1 ? "s" : "") you").foregroundStyle(Palette.amber)
+            }
+            if waiting > 0 && working > 0 { Text("·").foregroundStyle(Palette.textTertiary) }
+            if working > 0 {
+                SproutShape().scaleEffect(0.65).frame(width: 13, height: 13)
+                Text("\(working) working").foregroundStyle(Palette.textSecondary)
+            }
+        }
+        .font(Typo.captionEmphasized)
+        .monospacedDigit()
+        .padding(.leading, 6)
+        .padding(.trailing, 9)
+        .frame(height: 22)
+        .background(Capsule().fill(Palette.chip))
     }
 }
 
@@ -230,16 +238,4 @@ private struct ScrollOffsetReader: NSViewRepresentable {
             onChange?(y + clip.contentInsets.top)
         }
     }
-}
-
-struct VisualEffectBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .sidebar
-        view.blendingMode = .behindWindow
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }

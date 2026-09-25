@@ -133,6 +133,10 @@ struct ForestHeader: View {
     var time: TimeOfDay
     /// One firefly per session that needs you (true = an error), at most five.
     var fireflies: [Bool]
+    /// Nudges for a short, fixed-height use (the menu bar panel): keep the moon inside the strip
+    /// and the fireflies below the summary chip.
+    var skyDrop: CGFloat = 0
+    var fireflyDrop: CGFloat = 0
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -151,7 +155,7 @@ struct ForestHeader: View {
                     ctx.fill(sky, with: .linearGradient(Gradient(colors: [palette.skyTop, palette.skyBottom]),
                                                         startPoint: .zero, endPoint: CGPoint(x: 0, y: Metrics.headerHeight)))
                     var skyCtx = ctx
-                    skyCtx.translateBy(x: 0, y: -30 * c)
+                    skyCtx.translateBy(x: 0, y: -30 * c + skyDrop)
                     skyCtx.drawLayer { glow in
                         glow.addFilter(.blur(radius: 16))
                         glow.fill(Path(ellipseIn: CGRect(x: width * 0.7 - 170, y: 66, width: 340, height: 68)), with: .color(palette.glow))
@@ -176,7 +180,7 @@ struct ForestHeader: View {
                 FireflyField(
                     flies: fireflies.prefix(Self.fireflySpots.count).enumerated().map { i, isError in
                         let spot = Self.fireflySpots[i]
-                        return Firefly(x: (spot.x * width).rounded(), y: spot.y + midY, isError: isError)
+                        return Firefly(x: (spot.x * width).rounded(), y: spot.y + midY + fireflyDrop, isError: isError)
                     },
                     animated: !reduceMotion
                 )
@@ -292,6 +296,8 @@ final class FireflyView: NSView {
 /// soft patches of light as if through leaves, and a fine grain.
 struct ForestBackground: View {
     var time: TimeOfDay
+    /// How far down the header's color holds before the fade starts.
+    var headerHeight: CGFloat = Metrics.headerHeight
     @Environment(\.colorScheme) private var colorScheme
 
     /// Patches of light: center (x as a fraction of the width, y in points), radii, and strength.
@@ -301,7 +307,7 @@ struct ForestBackground: View {
 
     var body: some View {
         GeometryReader { geo in
-            let hold = min(Metrics.headerHeight / max(geo.size.height, 1), 0.4)
+            let hold = min(headerHeight / max(geo.size.height, 1), 0.4)
             let dapple = ScenePalette.of(time, dark: colorScheme == .dark).dapple
             ZStack {
                 LinearGradient(stops: [

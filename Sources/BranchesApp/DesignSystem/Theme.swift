@@ -4,7 +4,6 @@ import SwiftUI
 
 /// Forest-inspired tokens (docs/04-design.md §9). Dark is primary; light is supported.
 enum Palette {
-    static let window = dynamic(dark: 0x141613, light: 0xF4F1EA)
     static let textPrimary = dynamic(dark: 0xECE6D8, light: 0x1E211C)
     static let textSecondary = dynamic(dark: 0xA9A391, light: 0x5C5A50)
     static let textTertiary = dynamic(dark: 0x6E6A5E, light: 0x8E8A7E)

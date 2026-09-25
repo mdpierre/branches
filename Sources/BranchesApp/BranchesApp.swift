@@ -86,13 +86,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 if let menuURL, let model = AppModel.current {
                     let host = NSHostingView(rootView: MenuBarPanel().environment(model).preferredColorScheme(.dark))
-                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 340, height: 400),
+                    host.wantsLayer = true
+                    host.layer?.cornerRadius = 10
+                    host.layer?.masksToBounds = true
+                    let panel = NSWindow(contentRect: NSRect(x: 240, y: 240, width: 340, height: 400),
                                          styleMask: [.borderless], backing: .buffered, defer: false)
                     panel.appearance = NSAppearance(named: .darkAqua)
+                    panel.isOpaque = false
+                    panel.backgroundColor = .clear
                     panel.contentView = host
                     panel.setContentSize(host.fittingSize)
                     panel.orderFront(nil)
-                    Self.capture(host, to: menuURL, background: NSColor(srgbRed: 0.16, green: 0.17, blue: 0.16, alpha: 1))
+                    // Give the fireflies and sprouts a moment to render before capturing.
+                    RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+                    if !Self.captureOnScreen(panel, to: menuURL) {
+                        Self.capture(host, to: menuURL, background: NSColor(srgbRed: 0.16, green: 0.17, blue: 0.16, alpha: 1))
+                    }
                 }
                 NSApp.terminate(nil)
             }

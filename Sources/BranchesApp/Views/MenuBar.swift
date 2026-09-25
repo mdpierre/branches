@@ -71,20 +71,48 @@ struct MenuBarPanel: View {
             }
     }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("BRANCHES")
-                    .font(Typo.wordmark)
-                    .tracking(1.2)
-                    .foregroundStyle(Palette.textSecondary)
-                Spacer()
-                summary
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+    /// A short strip of the main window's treeline: the same scene, shrunk most of the way.
+    private static let headerHeight: CGFloat = 60
 
-            Rectangle().fill(Palette.bark.opacity(0.4)).frame(height: 0.5)
+    var body: some View {
+        TimelineView(.everyMinute) { context in
+            let time = model.timeOfDay(at: context.date)
+            panel
+                .background { ForestBackground(time: time, headerHeight: Self.headerHeight) }
+                .overlay(alignment: .top) {
+                    ForestHeader(
+                        collapse: (Metrics.headerHeight - Self.headerHeight) / Metrics.headerCollapseDistance,
+                        time: time,
+                        fireflies: model.fireflies,
+                        skyDrop: 14,
+                        fireflyDrop: 16
+                    )
+                    .frame(height: Self.headerHeight)
+                    .overlay(alignment: .topLeading) { topStrip }
+                }
+        }
+        .frame(width: 340)
+        .foregroundStyle(Palette.textPrimary)
+    }
+
+    private var topStrip: some View {
+        HStack {
+            Text("BRANCHES")
+                .font(Typo.wordmark)
+                .tracking(1.6)
+                .foregroundStyle(Palette.textPrimary.opacity(0.8))
+            Spacer()
+            if model.needsYouCount + model.workingCount > 0 {
+                SummaryChip(waiting: model.needsYouCount, working: model.workingCount)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 9)
+    }
+
+    private var panel: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Color.clear.frame(height: Self.headerHeight)
 
             if sessions.isEmpty {
                 Text("No coding agents running.")
@@ -121,26 +149,6 @@ struct MenuBarPanel: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
         }
-        .frame(width: 340)
-        .background {
-            ZStack {
-                VisualEffectBackground()
-                Palette.window.opacity(0.82)
-            }
-        }
-        .foregroundStyle(Palette.textPrimary)
-    }
-
-    @ViewBuilder private var summary: some View {
-        let waiting = model.needsYouCount
-        let working = model.workingCount
-        HStack(spacing: 4) {
-            if waiting > 0 { Text("\(waiting) need\(waiting == 1 ? "s" : "") you").foregroundStyle(Palette.amber) }
-            if waiting > 0 && working > 0 { Text("·").foregroundStyle(Palette.textTertiary) }
-            if working > 0 { Text("\(working) working").foregroundStyle(Palette.textSecondary) }
-        }
-        .font(Typo.captionEmphasized)
-        .monospacedDigit()
     }
 }
 
@@ -153,7 +161,6 @@ private struct MenuBarRow: View {
         Button { model.jump(session) } label: {
             HStack(alignment: .top, spacing: 8) {
                 StatusNode(status: session.status)
-                    .frame(width: 16, height: 16)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(session.title)

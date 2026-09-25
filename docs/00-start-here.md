@@ -11,7 +11,7 @@ Where the build differs from the plan:
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
 - **Added after v0.1:** a menu bar icon with a "needs you" count and drop-down panel, plus optional notifications (needs you / finished a turn).
 - **Forest v1 visual pass (2026-09-25):** treeline header with a time-of-day sky and "needs you" fireflies, plant status glyphs, twig connectors and a forest-floor background. See `04-design.md`. `--screenshot` also takes `--window-size WxH`, `--scene dawn|day|dusk|night` and `--scroll N`.
-- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate) and tmux pane focusing. The menu bar panel uses the new glyphs, but not the forest background yet.
+- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate) and tmux pane focusing.
 
 ## The planning package
 | File | Covers (deliverable #) |

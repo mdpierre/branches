@@ -18,6 +18,7 @@ Deliverables 8 and 9. The goal: *a refined developer tool interpreted through fo
   - **Scroll-to-shrink:** as the list scrolls, the header shrinks from 128 pt to a 40 pt strip of treetops over the first 88 pt. The layers move at different rates (parallax: sky 30, far 70, mid 80, near 88), and a hairline appears under it. Windows shorter than 400 pt start shrunk. With Reduce Motion, it snaps instead of easing.
 - **Top strip** (overlaid on the header): the wordmark `BRANCHES`, tracking +8%. On the right, a summary chip such as **`🏮 2 need you · 🌱 3 working`** (click it to cycle the selection through "Needs you" rows), plus a `⋯` settings button. Both sit on `chip` capsules so they read over the sky. Once the header shrinks, the strip moves beside the traffic lights.
 - Body: a scrolling list of **project groups**.
+- **Menu bar panel:** the same scene at a smaller size: a 60 pt strip of the treeline (the header shrunk most of the way, with the moon and fireflies nudged to stay in view), with the wordmark and summary chip on top. Below it is a flat list of sessions with their plant glyphs, over the forest background.
 - There is no sidebar, no tabs, no toolbar and no second screen. Settings = a small popover from a `⋯` button (hook install/remove, show ended sessions, diagnostics).
 
 ### Project group
@@ -99,7 +100,6 @@ Needs-you node and status text → project names → session titles → Working 
 ### Semantic colors (dark is the primary theme; light is supported)
 | Token | Dark | Light | Use |
 |---|---|---|---|
-| `bg.window` | `#141613` (charcoal-moss) | `#F4F1EA` | menu bar panel tint |
 | `forest.top` | `#17211A` | `#E9EDE2` | background under the header; the near treeline |
 | `forest.mid` | `#111712` | `#F0EFE7` | background middle |
 | `forest.bottom` | `#0B0D0B` | `#F4F1EA` | background bottom |
