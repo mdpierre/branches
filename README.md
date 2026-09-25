@@ -4,15 +4,7 @@
 
 Branches is a small, free, open-source Mac app that shows every Claude Code and Codex session running on your Mac, what each one is doing, and whether it needs you. Double-click a session to jump straight to its terminal tab.
 
-```
-branches
-├─●  Claude   Building auth flow              Working · 1m 42s
-│    Editing Auth.swift
-├─◎  Codex    Fix Gmail parser                Needs you · 12s
-│    Waiting for approval
-└─○  Claude   Refactor settings               Done · 3m ago
-     Terminal · ttys006
-```
+<p align="center"><img src="docs/images/screenshot.png" width="460" alt="Branches showing sessions grouped by project with Working, Needs you, Done and Idle statuses"></p>
 
 It **observes the workflow you already have**. Keep using your terminal, your agent CLI, tmux and your usual launch habits. Branches doesn't launch, prompt or control anything, and it needs no setup.
 
@@ -38,7 +30,7 @@ scripts/bundle.sh
 open dist/Branches.app
 ```
 
-Or run it straight from the source tree with `swift run Branches`.
+Or run it straight from the source tree with `swift run Branches`. To see it with made-up sessions, run `swift run Branches --demo`.
 
 **Download:** signed releases will be published on GitHub Releases.
 
@@ -81,6 +73,7 @@ The design docs are in [`docs/`](docs/00-start-here.md).
 ## Contributing
 
 - `swift build && swift test`
+- `swift run Branches --demo` shows sample sessions, handy for UI work. `swift run Branches --screenshot docs/images/screenshot.png` regenerates the README image.
 - Read [CLAUDE.md](CLAUDE.md) for the project's hard rules, which apply to humans too.
 - To add a provider (Gemini CLI, OpenCode, …), see [Sources/BranchesKit/Providers/README.md](Sources/BranchesKit/Providers/README.md).
 

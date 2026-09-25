@@ -252,6 +252,7 @@ struct BreathingGlow: NSViewRepresentable {
         let glow = CALayer()
         glow.cornerRadius = 8
         glow.frame = CGRect(x: 0, y: 0, width: 16, height: 16)
+        glow.opacity = 0.22 // resting value, seen in snapshots and before the animation starts
         view.layer?.addSublayer(glow)
         let pulse = CABasicAnimation(keyPath: "opacity")
         pulse.fromValue = 0.08

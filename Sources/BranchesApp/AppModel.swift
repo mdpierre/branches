@@ -38,7 +38,14 @@ final class AppModel {
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
     }
 
+    /// `--demo` (or `--screenshot`) shows made-up sessions instead of watching the real ones.
+    static let isDemo = CommandLine.arguments.contains("--demo") || CommandLine.arguments.contains("--screenshot")
+
     func start() {
+        if Self.isDemo {
+            snapshot = DemoData.snapshot()
+            return
+        }
         let store = store
         Task {
             await store.start()
@@ -89,7 +96,8 @@ final class AppModel {
             if ra != rb { return ra < rb }
             let la = a.rows.map(\.session.lastActivityAt).max() ?? .distantPast
             let lb = b.rows.map(\.session.lastActivityAt).max() ?? .distantPast
-            return la > lb
+            if la != lb { return la > lb }
+            return a.name.localizedStandardCompare(b.name) == .orderedAscending
         }
         return groups
     }

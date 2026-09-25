@@ -217,6 +217,28 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
     public var parent: SessionKey?
     public var resumeCommand: String?
     public var lastActivityAt: Date
+
+    public init(
+        id: SessionKey, projectName: String, projectPath: String, cwd: String, title: String,
+        activity: String? = nil, lastPrompt: String? = nil, status: StatusResult, host: HostApp? = nil,
+        tty: String? = nil, pid: Int32? = nil, parent: SessionKey? = nil, resumeCommand: String? = nil,
+        lastActivityAt: Date
+    ) {
+        self.id = id
+        self.projectName = projectName
+        self.projectPath = projectPath
+        self.cwd = cwd
+        self.title = title
+        self.activity = activity
+        self.lastPrompt = lastPrompt
+        self.status = status
+        self.host = host
+        self.tty = tty
+        self.pid = pid
+        self.parent = parent
+        self.resumeCommand = resumeCommand
+        self.lastActivityAt = lastActivityAt
+    }
 }
 
 public struct ProviderDiagnostics: Sendable, Equatable {
@@ -238,6 +260,11 @@ public struct ProviderDiagnostics: Sendable, Equatable {
 public struct StoreSnapshot: Sendable, Equatable {
     public var sessions: [SessionSnapshot]
     public var diagnostics: [ProviderDiagnostics]
+
+    public init(sessions: [SessionSnapshot], diagnostics: [ProviderDiagnostics]) {
+        self.sessions = sessions
+        self.diagnostics = diagnostics
+    }
 
     public static let empty = StoreSnapshot(sessions: [], diagnostics: [])
 }
