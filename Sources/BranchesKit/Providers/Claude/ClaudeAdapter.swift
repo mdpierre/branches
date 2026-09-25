@@ -84,8 +84,9 @@ public final class ClaudeAdapter: ProviderAdapter {
             if let status = o.str("status") {
                 e.liveStatus = LiveStatus(raw: status)
                 e.liveStatusAt = statusAt
+                e.waitingFor = o.str("waitingFor")
             }
-            if let name = o.str("name"), !Self.isAutoName(name) { e.providerTitle = name }
+            if let name = o.str("name"), !Self.isAutoName(name, source: o.str("nameSource")) { e.providerTitle = name }
             if let v = o.str("version") { e.formatVersion = v; diag.formatVersions.insert(v) }
             e.resumeCommand = Self.resumeCommand(sid: sid, cwd: e.cwd)
             e.touch(statusAt)
@@ -228,8 +229,9 @@ public final class ClaudeAdapter: ProviderAdapter {
     }
 
     /// Claude auto-names sessions like "myproject-3b"; those aren't useful titles.
-    static func isAutoName(_ name: String) -> Bool {
-        name.range(of: #"^[a-z0-9._-]+-[0-9a-f]{2,4}$"#, options: .regularExpression) != nil
+    static func isAutoName(_ name: String, source: String? = nil) -> Bool {
+        if source == "auto" || source == "collision" { return true }
+        return name.range(of: #"^[a-z0-9._-]+-[0-9a-f]{2,4}$"#, options: .regularExpression) != nil
     }
 
     static func resumeCommand(sid: String, cwd: String) -> String {

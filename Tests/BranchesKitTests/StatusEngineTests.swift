@@ -39,9 +39,36 @@ final class StatusEngineTests: XCTestCase {
         XCTAssertEqual(eval(evidence { $0.liveStatus = .waiting; $0.liveStatusAt = self.now }).display, .needsYou)
     }
 
-    func testInstantToolPendingTooLongIsProbablyPermission() {
+    func testWaitingForPermissionPromptIsNeedsYouPermission() {
+        let r = eval(evidence { $0.liveStatus = LiveStatus(raw: "waiting"); $0.waitingFor = "permission prompt"; $0.liveStatusAt = self.now })
+        XCTAssertEqual(r.display, .needsYou)
+        XCTAssertEqual(r.attention, .permission)
+        XCTAssertEqual(r.confidence, .reported)
+    }
+
+    func testWaitingForInputIsNeedsYouInput() {
+        let r = eval(evidence { $0.liveStatus = .waiting; $0.waitingFor = "input needed"; $0.liveStatusAt = self.now })
+        XCTAssertEqual(r.display, .needsYou)
+        XCTAssertEqual(r.attention, .input)
+        XCTAssertEqual(eval(evidence { $0.liveStatus = .waiting; $0.waitingFor = "dialog open"; $0.liveStatusAt = self.now }).attention, .input)
+    }
+
+    func testShellStatusIsIdle() {
+        XCTAssertEqual(LiveStatus(raw: "shell"), .idle)
+    }
+
+    func testBusyWithSlowInstantToolStaysWorkingWhenProviderReportsWaiting() {
+        // Claude reports "waiting" itself, so a Grep that takes 20 s on a big repo is just work.
         let r = eval(evidence {
-            $0.liveStatus = .busy; $0.liveStatusAt = self.now - 20
+            $0.liveStatus = .busy; $0.liveStatusAt = self.now - 30
+            $0.pendingTool = PendingTool(name: "Grep", since: self.now - 20)
+        })
+        XCTAssertEqual(r.display, .working)
+    }
+
+    func testTranscriptOnlyInstantToolPendingIsProbablyPermission() {
+        let r = eval(evidence {
+            $0.turn = .running(since: self.now - 20)
             $0.pendingTool = PendingTool(name: "Edit", since: self.now - 10)
         })
         XCTAssertEqual(r.display, .needsYou)

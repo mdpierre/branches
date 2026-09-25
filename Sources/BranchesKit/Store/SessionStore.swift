@@ -158,6 +158,7 @@ public actor SessionStore {
                 activity: status.display == .working || status.display == .needsYou ? e.activity : nil,
                 lastPrompt: e.lastPrompt,
                 status: status,
+                waitingFor: status.display == .needsYou ? e.waitingFor : nil,
                 host: host,
                 tty: pid.flatMap { procs[$0]?.tty },
                 pid: alive == true ? pid : nil,

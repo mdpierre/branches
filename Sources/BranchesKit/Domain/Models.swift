@@ -55,7 +55,10 @@ public enum Confidence: String, Sendable {
 }
 
 public enum AttentionReason: Sendable, Equatable {
+    /// Waiting for you to approve a tool call.
     case permission
+    /// Waiting for an answer, a choice, or a dialog to be dismissed.
+    case input
     case error
 }
 
@@ -88,7 +91,8 @@ public enum LiveStatus: Sendable, Equatable {
         let r = raw.lowercased()
         switch r {
         case "busy", "working", "running": self = .busy
-        case "idle": self = .idle
+        // Claude writes "shell" when idle with a shell command in its input.
+        case "idle", "shell": self = .idle
         default:
             if ["wait", "permission", "input", "attention", "blocked"].contains(where: r.contains) {
                 self = .waiting
@@ -138,6 +142,8 @@ public struct SessionEvidence: Sendable, Equatable {
     // Status signals
     public var liveStatus: LiveStatus?
     public var liveStatusAt: Date?
+    /// Why the provider says it's waiting, e.g. "permission prompt", "input needed", "dialog open".
+    public var waitingFor: String?
     public var turn: TurnState = .unknown
     /// True when `turn` comes from explicit provider events rather than transcript shape.
     public var turnReported: Bool = false
@@ -211,6 +217,7 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
     public var activity: String?
     public var lastPrompt: String?
     public var status: StatusResult
+    public var waitingFor: String?
     public var host: HostApp?
     public var tty: String?
     public var pid: Int32?
@@ -220,7 +227,7 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
 
     public init(
         id: SessionKey, projectName: String, projectPath: String, cwd: String, title: String,
-        activity: String? = nil, lastPrompt: String? = nil, status: StatusResult, host: HostApp? = nil,
+        activity: String? = nil, lastPrompt: String? = nil, status: StatusResult, waitingFor: String? = nil, host: HostApp? = nil,
         tty: String? = nil, pid: Int32? = nil, parent: SessionKey? = nil, resumeCommand: String? = nil,
         lastActivityAt: Date
     ) {
@@ -232,6 +239,7 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
         self.activity = activity
         self.lastPrompt = lastPrompt
         self.status = status
+        self.waitingFor = waitingFor
         self.host = host
         self.tty = tty
         self.pid = pid

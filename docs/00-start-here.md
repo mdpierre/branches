@@ -6,7 +6,7 @@
 v0.1 is built: milestones M1–M4 and M6 from `05-build-plan.md`, plus most of M7. It runs on real sessions. `swift test` passes 34 tests. `scripts/bundle.sh` builds a universal `dist/Branches.app`.
 
 Where the build differs from the plan:
-- **The optional Claude hook (M5) is not built.** "Needs you" for Claude comes from two sources: a distinct waiting value in the status file, if Claude ever writes one, and a heuristic that flags an instant tool (Edit, Read, …) left pending for more than 6 s as a permission prompt. Build the hook only if that proves insufficient in daily use.
+- **The Claude hook (M5) is not needed.** Experiment E1 showed that Claude writes `status: "waiting"` and a `waitingFor` reason ("permission prompt", "input needed", "dialog open", …) to its own status file whenever it's waiting for you. Branches reads that directly. The 6 s "pending tool" guess is now only a fallback for sessions without a status file.
 - **Codex PID** is matched by working directory against running `codex` processes, because Codex doesn't record its PID (experiment E3 is still open).
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
 - **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate), the menu-bar extra, and tmux pane focusing.

@@ -28,7 +28,9 @@ Only file *structure* (keys and record types) was inspected, never message conte
   "kind": "interactive",
   "entrypoint": "cli",            // or "claude-desktop"
   "name": "…", "nameSource": …,   // session display name
-  "status": "busy",               // observed values: "busy", "idle"
+  "status": "busy",               // "busy" | "idle" | "waiting" | "shell" (idle with a shell command)
+  "waitingFor": "permission prompt", // set while waiting: "permission prompt", "input needed",
+                                     // "dialog open", "sandbox request", "worker request", …
   "statusUpdatedAt": 1790290425103,
   "updatedAt": 1790290425103,
   "messagingSocketPath": "/tmp/cc-socks/<pid>.sock"
@@ -38,7 +40,9 @@ Next to each `.json` there is a `<pid>.<hash>.key` file. **Branches must never r
 
 With only this file, Branches gets live status, PID↔session↔cwd correlation and the session name, with **zero configuration and no hook**. That turns the Claude hook from "the main live source" into "an optional precision upgrade" (mainly for detecting *waiting for permission*).
 
-Risk: it's undocumented, so it could change or disappear in any release. Treat it as a strong signal with fallbacks, not as the foundation. Values other than `busy`/`idle` (for example a waiting state) are **[UNVERIFIED]** → Experiment E1.
+Risk: it's undocumented, so it could change or disappear in any release. Treat it as a strong signal with fallbacks, not as the foundation.
+
+**E1 resolved (2026-09-24, from the Claude Code 2.1.x source):** whenever a prompt is on screen, Claude writes `status: "waiting"` plus a `waitingFor` reason. Its SDK path maps `requires_action` to `waiting` with `"permission prompt"` or `"input needed"`. **So "Needs you" is reported by Claude itself, and the optional hook is not needed.** The file also carries `nameSource` (`user`/`peer`/`derived`/`collision`/`auto`/`hook`) and, in some modes, `state`/`detail`/`tempo`/`tmux`.
 
 ---
 

@@ -3,7 +3,8 @@ import Foundation
 /// Pure function from evidence to the five-word status. See docs/03-architecture.md §6.
 public enum StatusEngine {
     public struct Tuning: Sendable {
-        /// An "instant" tool (Edit, Read…) still pending after this long means a permission prompt.
+        /// Transcript-only fallback (no live status file): an "instant" tool (Edit, Read…) still
+        /// pending after this long probably means a permission prompt.
         public var permissionAfter: TimeInterval = 6
         /// Working inferred from transcript shape only; quiet longer than this → "No recent activity".
         public var inferredQuiet: TimeInterval = 180
@@ -52,12 +53,11 @@ public enum StatusEngine {
         if let live = e.liveStatus, let at = e.liveStatusAt, !transcriptIsNewer(e, than: at) {
             switch live {
             case .waiting:
-                return StatusResult(.needsYou, .reported, since: at, reason: "provider: waiting", attention: .permission)
+                // Claude writes status "waiting" whenever a prompt is on screen, with the reason
+                // in waitingFor ("permission prompt", "input needed", "dialog open", …).
+                let why = e.waitingFor ?? "waiting"
+                return StatusResult(.needsYou, .reported, since: at, reason: "provider: \(why)", attention: attention(for: e.waitingFor))
             case .busy:
-                if let tool = e.pendingTool, ClaudeTools.instant.contains(tool.name),
-                   now.timeIntervalSince(tool.since) > t.permissionAfter {
-                    return StatusResult(.needsYou, .inferred, since: tool.since, reason: "\(tool.name) pending, probably awaiting approval", attention: .permission)
-                }
                 // The provider flips to busy when a turn starts, so its timestamp is the most accurate start.
                 let since = at
                 if now.timeIntervalSince(max(at, e.lastActivityAt)) > t.reportedQuiet {
@@ -75,6 +75,12 @@ public enum StatusEngine {
         }
 
         return fromTurn(e, lastSeen: lastSeen, now: now, t, note: nil)
+    }
+
+    static func attention(for waitingFor: String?) -> AttentionReason {
+        let w = (waitingFor ?? "").lowercased()
+        if w.isEmpty || w.contains("permission") || w.contains("sandbox") || w.contains("approval") { return .permission }
+        return .input
     }
 
     private static func fromTurn(_ e: SessionEvidence, lastSeen: Date?, now: Date, _ t: Tuning, note: String?) -> StatusResult {

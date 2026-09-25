@@ -57,6 +57,19 @@ final class ClaudeAdapterTests: XCTestCase {
         XCTAssertEqual(adapter.sessions.count, 1, "the .key file must be ignored")
     }
 
+    func testWaitingStatusCarriesReason() throws {
+        let home = makeHome(status: "waiting")
+        let url = home.path(".claude/sessions/4242.json")
+        var json = try String(contentsOf: url, encoding: .utf8)
+        json = json.replacingOccurrences(of: "\"status\":", with: "\"waitingFor\":\"permission prompt\",\"status\":")
+        try json.write(to: url, atomically: true, encoding: .utf8)
+        let adapter = ClaudeAdapter(home: home.path(".claude"))
+        adapter.bootstrap(now: t0 + 10)
+        let e = try XCTUnwrap(adapter.sessions.first)
+        XCTAssertEqual(e.liveStatus, .waiting)
+        XCTAssertEqual(e.waitingFor, "permission prompt")
+    }
+
     func testTranscriptGivesTitleActivityAndTurnEnd() throws {
         let home = makeHome()
         transcript(home, [
