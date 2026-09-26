@@ -119,6 +119,8 @@ Focus: the parts that can silently lie to the user (parsing and status). Skip sn
 
 Each task is small, verifiable, and depends only on tasks above it.
 
+Status as of 2026-09-26: ticked items are done. Italic notes mark where the build differs from the plan or why an item is still open.
+
 ### Phase 0 — Probes
 - [ ] 0.1 Run **E1, E2** (Claude state file behavior). Record the results in `docs/probe-results.md`.
 - [ ] 0.2 Run **E9** (FSEvents Swift script). Record latency and CPU.
@@ -129,59 +131,59 @@ Each task is small, verifiable, and depends only on tasks above it.
 - [ ] 0.7 Update `03-architecture.md` wherever a probe contradicted an assumption.
 
 ### Phase 1 — Skeleton
-- [ ] 1.1 `Package.swift` with `BranchesKit`, `BranchesApp` and `BranchesKitTests`. `swift build` and `swift test` pass.
-- [ ] 1.2 `BranchesApp` shows a single `Window` with the placeholder text "No coding agents running."
-- [ ] 1.3 `scripts/bundle.sh` produces a double-clickable `Branches.app` (ad-hoc signed).
-- [ ] 1.4 `Support/Log.swift`, `Support/Clock.swift`, `Support/Paths.swift` (with `BRANCHES_ROOT_OVERRIDE` for tests).
-- [ ] 1.5 Domain types: `SessionKey`, `Session`, `ProjectRef`, `Observation`, `Fact`, `StatusResult`. They compile, with no logic.
-- [ ] 1.6 `ProviderAdapter` protocol + `ProviderCapabilities` + `ProviderDiagnostics`.
+- [x] 1.1 `Package.swift` with `BranchesKit`, `BranchesApp` and `BranchesKitTests`. `swift build` and `swift test` pass.
+- [x] 1.2 `BranchesApp` shows a single `Window` with the placeholder text "No coding agents running."
+- [x] 1.3 `scripts/bundle.sh` produces a double-clickable `Branches.app` (ad-hoc signed).
+- [x] 1.4 `Support/Log.swift`, `Support/Clock.swift`, `Support/Paths.swift` (with `BRANCHES_ROOT_OVERRIDE` for tests). *Done as `Support/Support.swift`: `Log`, and `ProviderRoots` with a `BRANCHES_HOME` override. Code takes `now` as a parameter instead of a `Clock` type.*
+- [x] 1.5 Domain types: `SessionKey`, `Session`, `ProjectRef`, `Observation`, `Fact`, `StatusResult`. They compile, with no logic. *`SessionKey` and `StatusResult` as planned; sessions and observations became `SessionEvidence` / `SessionSnapshot`.*
+- [x] 1.6 `ProviderAdapter` protocol + `ProviderCapabilities` + `ProviderDiagnostics`.
 
 ### Phase 2 — Claude observer
-- [ ] 2.1 `FileWatcher`: FSEvents → `AsyncStream<[URL]>`. Test: create/append in a temp dir → an event is received.
-- [ ] 2.2 `ClaudeSessionsFile`: decode `sessions/*.json` (every field optional; ignore `*.key`). Fixture test.
-- [ ] 2.3 `ClaudeAdapter.bootstrap` + `ingest` for `sessions/*.json` only → `.discovered`, `.pid`, `.liveStatus`.
-- [ ] 2.4 `SessionStore` actor: apply observations, publish a snapshot. `AppModel` renders a plain list. **→ M1 runnable.**
-- [ ] 2.5 `JSONLTailReader` with cursor, partial-line and truncation handling, plus its tests.
-- [ ] 2.6 `ClaudeRecords`: an envelope decode + `user` / `assistant` / `last-prompt` / `custom-title` shapes. Fixture tests, including unknown types.
-- [ ] 2.7 Adapter emits `.userPrompt`, `.toolStarted/.toolFinished`, `.turnEnded`, `.title` from transcripts. Maps tool names to activity text ("Edit" + file → "Editing Auth.swift", "Bash" → "Running command", "Read" → "Reading …").
-- [ ] 2.8 Project grouping by git root (walk up looking for `.git`, cached per cwd).
+- [ ] 2.1 `FileWatcher`: FSEvents → `AsyncStream<[URL]>`. Test: create/append in a temp dir → an event is received. *`FileWatcher` is built, but has no automated test yet.*
+- [x] 2.2 `ClaudeSessionsFile`: decode `sessions/*.json` (every field optional; ignore `*.key`). Fixture test. *Decoded inside `ClaudeAdapter`, not a separate type.*
+- [x] 2.3 `ClaudeAdapter.bootstrap` + `ingest` for `sessions/*.json` only → `.discovered`, `.pid`, `.liveStatus`.
+- [x] 2.4 `SessionStore` actor: apply observations, publish a snapshot. `AppModel` renders a plain list. **→ M1 runnable.**
+- [x] 2.5 `JSONLTailReader` with cursor, partial-line and truncation handling, plus its tests.
+- [x] 2.6 `ClaudeRecords`: an envelope decode + `user` / `assistant` / `last-prompt` / `custom-title` shapes. Fixture tests, including unknown types.
+- [x] 2.7 Adapter emits `.userPrompt`, `.toolStarted/.toolFinished`, `.turnEnded`, `.title` from transcripts. Maps tool names to activity text ("Edit" + file → "Editing Auth.swift", "Bash" → "Running command", "Read" → "Reading …").
+- [x] 2.8 Project grouping by git root (walk up looking for `.git`, cached per cwd).
 
 ### Phase 3 — Status
-- [ ] 3.1 `StatusEngine` pure function + table-driven tests for every transition-table row.
-- [ ] 3.2 Decay scheduler (a single earliest-deadline task) + tests using the fake clock.
-- [ ] 3.3 `lastSeen` in UserDefaults; Done → Idle on focus.
-- [ ] 3.4 Sleep/wake handling. **→ M2 runnable.**
+- [x] 3.1 `StatusEngine` pure function + table-driven tests for every transition-table row.
+- [x] 3.2 Decay scheduler (a single earliest-deadline task) + tests using the fake clock. *Done as a store tick that re-evaluates every 2 s while anything is Working or Needs you (15 s otherwise), not an earliest-deadline task. Decay is tested by passing `now` to `StatusEngine`.*
+- [x] 3.3 `lastSeen` in UserDefaults; Done → Idle on focus.
+- [x] 3.4 Sleep/wake handling. **→ M2 runnable.**
 
 ### Phase 4 — Codex
-- [ ] 4.1 `CodexRecords` (`session_meta`, `turn_context`, `event_msg` types, `response_item` tool calls) + fixtures.
-- [ ] 4.2 `CodexAdapter` watching `~/.codex/sessions/**` + `session_index.jsonl` titles.
-- [ ] 4.3 Register the adapter; Codex rows appear. **→ M3 runnable.**
+- [x] 4.1 `CodexRecords` (`session_meta`, `turn_context`, `event_msg` types, `response_item` tool calls) + fixtures.
+- [x] 4.2 `CodexAdapter` watching `~/.codex/sessions/**` + `session_index.jsonl` titles.
+- [x] 4.3 Register the adapter; Codex rows appear. **→ M3 runnable.**
 
 ### Phase 5 — Process correlation
-- [ ] 5.1 `ProcessScanner`: `sysctl` snapshot (pid, ppid, start time, tty, uid), `proc_pidpath`, cwd via `proc_pidinfo`. Behind a `ProcessTable` protocol for tests.
-- [ ] 5.2 `HostAppResolver`: walk ppid to the first `.app` → `HostApp`.
-- [ ] 5.3 Liveness: pid death / start-time mismatch → `.sessionEnded`. A 2 s tick only while Working or Needs you.
-- [ ] 5.4 Codex pid matching per the E3 result.
+- [x] 5.1 `ProcessScanner`: `sysctl` snapshot (pid, ppid, start time, tty, uid), `proc_pidpath`, cwd via `proc_pidinfo`. Behind a `ProcessTable` protocol for tests.
+- [x] 5.2 `HostAppResolver`: walk ppid to the first `.app` → `HostApp`.
+- [x] 5.3 Liveness: pid death / start-time mismatch → `.sessionEnded`. A 2 s tick only while Working or Needs you.
+- [x] 5.4 Codex pid matching per the E3 result. *Matched by working directory; E3 is still open.*
 
 ### Phase 6 — Navigation
-- [ ] 6.1 `FocusService` with the L1→L4 ladder and a result enum (for the toast).
-- [ ] 6.2 `TerminalAppFocuser` (AppleScript tty match; handle −1743 denial → L2).
-- [ ] 6.3 L2 via `NSRunningApplication.activate`, L3 `NSWorkspace.open(folder)`, L4 copy the resume command. **→ M4 runnable.**
-- [ ] 6.4 `HookInstaller` (backup, tagged merge, diff confirm, uninstall) + tests.
-- [ ] 6.5 `branches-claude-hook.sh` + `ClaudeHookInbox` → `.needsAttention`, `.toolStarted`, etc. **→ M5 runnable.**
+- [x] 6.1 `FocusService` with the L1→L4 ladder and a result enum (for the toast).
+- [x] 6.2 `TerminalAppFocuser` (AppleScript tty match; handle −1743 denial → L2).
+- [x] 6.3 L2 via `NSRunningApplication.activate`, L3 `NSWorkspace.open(folder)`, L4 copy the resume command. **→ M4 runnable.**
+- [ ] 6.4 `HookInstaller` (backup, tagged merge, diff confirm, uninstall) + tests. *Skipped: not needed, Claude reports waiting itself (see `00-start-here.md`).*
+- [ ] 6.5 `branches-claude-hook.sh` + `ClaudeHookInbox` → `.needsAttention`, `.toolStarted`, etc. **→ M5 runnable.** *Skipped, as 6.4.*
 
 ### Phase 7 — Visual polish
-- [ ] 7.1 DesignSystem tokens (Palette, Typography, Metrics, Motion).
-- [ ] 7.2 `ProjectGroupView` + `BranchConnector` + `StatusNodeView` (all node variants, Reduce Motion).
-- [ ] 7.3 Row hover, selection, context menu, toast.
-- [ ] 7.4 Keyboard navigation and filter.
-- [ ] 7.5 Empty state, first-run hook card, settings popover, diagnostics view. **→ M6 runnable.**
+- [x] 7.1 DesignSystem tokens (Palette, Typography, Metrics, Motion). *`Palette`, `Typo` and `Metrics` in `Theme.swift`; no separate `Motion` enum.*
+- [x] 7.2 `ProjectGroupView` + `BranchConnector` + `StatusNodeView` (all node variants, Reduce Motion). *Status nodes became plant glyphs in `StatusGlyphs.swift` (Forest v1).*
+- [x] 7.3 Row hover, selection, context menu, toast.
+- [x] 7.4 Keyboard navigation and filter.
+- [x] 7.5 Empty state, first-run hook card, settings popover, diagnostics view. **→ M6 runnable.** *No hook card, since the hook was skipped.*
 
 ### Phase 8 — Packaging
-- [ ] 8.1 Info.plist (`NSAppleEventsUsageDescription`), entitlements, Hardened Runtime.
-- [ ] 8.2 `notarize.sh` (Developer ID, notarytool, stapler).
-- [ ] 8.3 README with screenshot, PRIVACY.md, LICENSE, `Providers/README.md`.
-- [ ] 8.4 GitHub Actions: `swift build` + `swift test` on macOS runners.
+- [x] 8.1 Info.plist (`NSAppleEventsUsageDescription`), entitlements, Hardened Runtime.
+- [ ] 8.2 `notarize.sh` (Developer ID, notarytool, stapler). *Script written, but never run: needs a Developer ID.*
+- [x] 8.3 README with screenshot, PRIVACY.md, LICENSE, `Providers/README.md`.
+- [x] 8.4 GitHub Actions: `swift build` + `swift test` on macOS runners.
 - [x] 8.5 First GitHub Release (zip/DMG). **→ M7.** A Homebrew Cask can follow later. *v0.1.0 released 2026-09-26 as an ad-hoc signed zip; a notarized build is still to come (8.2).*
 
 ---
