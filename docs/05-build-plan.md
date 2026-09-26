@@ -182,7 +182,7 @@ Each task is small, verifiable, and depends only on tasks above it.
 - [ ] 8.2 `notarize.sh` (Developer ID, notarytool, stapler).
 - [ ] 8.3 README with screenshot, PRIVACY.md, LICENSE, `Providers/README.md`.
 - [ ] 8.4 GitHub Actions: `swift build` + `swift test` on macOS runners.
-- [ ] 8.5 First GitHub Release (zip/DMG). **→ M7.** A Homebrew Cask can follow later.
+- [x] 8.5 First GitHub Release (zip/DMG). **→ M7.** A Homebrew Cask can follow later. *v0.1.0 released 2026-09-26 as an ad-hoc signed zip; a notarized build is still to come (8.2).*
 
 ---
 

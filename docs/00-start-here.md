@@ -2,8 +2,10 @@
 
 **What it is:** a small Mac app that shows every Claude Code and Codex session running on your computer, what each one is doing, and whether it needs you. You click one to jump to its terminal. It never talks to the agents and never sends anything anywhere.
 
-## Build status (2026-09-24)
-v0.1 is built: milestones M1–M4 and M6 from `05-build-plan.md`, plus most of M7. It runs on real sessions. `swift test` passes 34 tests. `scripts/bundle.sh` builds a universal `dist/Branches.app`.
+## Build status (2026-09-26)
+**v0.1.0 is released** on [GitHub Releases](https://github.com/mdpierre/branches/releases/tag/v0.1.0) (2026-09-26) as `Branches-v0.1.0-macos-universal.zip`. The build is ad-hoc signed and not notarized, so the README explains how to open it the first time.
+
+v0.1 covers milestones M1–M4 and M6 from `05-build-plan.md`, plus most of M7. It runs on real sessions. `swift test` passes 44 tests. `scripts/bundle.sh` builds a universal `dist/Branches.app`, and `scripts/package-release.sh <version>` builds it and zips it for a release. The version must match `CFBundleShortVersionString` in `Resources/Info.plist`.
 
 Where the build differs from the plan:
 - **The Claude hook (M5) is not needed.** Experiment E1 showed that Claude writes `status: "waiting"` and a `waitingFor` reason ("permission prompt", "input needed", "dialog open", …) to its own status file whenever it's waiting for you. Branches reads that directly. The 6 s "pending tool" guess is now only a fallback for sessions without a status file.
@@ -11,7 +13,7 @@ Where the build differs from the plan:
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
 - **Added after v0.1:** a menu bar icon with a "needs you" count and drop-down panel, plus optional notifications (needs you / finished a turn).
 - **Forest v1 visual pass (2026-09-25):** treeline header with a time-of-day sky and "needs you" fireflies, plant status glyphs, twig connectors and a forest-floor background. See `04-design.md`. `--screenshot` also takes `--window-size WxH`, `--scene dawn|day|dusk|night`, `--scroll N` and `--menu-bar-screenshot <prefix>` (captures the real menu bar icon and the drop-down it opens).
-- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs your Apple Developer certificate) and tmux pane focusing.
+- **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs an Apple Developer Program membership; until then releases are ad-hoc signed) and tmux pane focusing.
 
 ## The planning package
 | File | Covers (deliverable #) |
