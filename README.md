@@ -36,9 +36,26 @@ A firefly drifts over the treeline for each session that needs you, and the sky 
 
 Hover over any row to see *why* Branches thinks so (e.g. "Working (reported): provider: busy").
 
-## Install
+## Download
 
-**From source** (requires Xcode 16+ / Swift 6, macOS 14+):
+1. Go to [GitHub Releases](https://github.com/mdpierre/branches/releases).
+2. Download `Branches-vX.Y.Z-macos-universal.zip` from the latest release. It runs on Apple silicon and Intel Macs with macOS 14 or later.
+3. Unzip it (double-click the zip in Finder).
+4. Move `Branches.app` into `/Applications`.
+5. Open Branches.
+
+Branches is currently distributed without Apple notarization. It is ad-hoc signed, not signed with a Developer ID. A notarized build may be added later.
+
+Because of that, macOS may block the first launch with a message that it can't verify Branches is free of malware. To open it anyway, do this once for Branches only:
+
+- **macOS 15 (Sequoia) and later:** try to open Branches and click **Done** on the warning. Then open **System Settings → Privacy & Security**, scroll to **Security**, find the note that Branches was blocked, and click **Open Anyway**. Confirm with your password or Touch ID, then click **Open Anyway** in the dialog that follows.
+- **macOS 14 (Sonoma):** in `/Applications`, Control-click (or right-click) Branches, choose **Open**, then click **Open** in the dialog. The same **Open Anyway** button in System Settings → Privacy & Security also works.
+
+After that, Branches opens normally. You don't need to turn off Gatekeeper or change any system-wide security setting. If you'd rather not run an unnotarized download, build it from source below.
+
+## Build from source
+
+Requires Xcode 16+ / Swift 6, macOS 14+.
 
 ```bash
 git clone https://github.com/mdpierre/branches && cd branches
@@ -47,8 +64,6 @@ open dist/Branches.app
 ```
 
 Or run it straight from the source tree with `swift run Branches`. To see it with made-up sessions, run `swift run Branches --demo`.
-
-**Download:** signed releases will be published on GitHub Releases.
 
 ## Keyboard
 
