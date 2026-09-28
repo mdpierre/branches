@@ -123,7 +123,7 @@ public final class CodexAdapter: ProviderAdapter {
             if let v = p.str("cli_version") { e.formatVersion = v; diag.formatVersions.insert(v) }
             let origin = (p.str("originator") ?? "").lowercased()
             // Only terminal sessions have a codex process we can find; app-hosted ones
-            // (ChatGPT app, IDE extensions) fall back to time-based status.
+            // (Codex app, IDE extensions) fall back to time-based status.
             let isTerminal = ["cli", "exec", "tui"].contains(where: origin.contains) || origin.isEmpty
             e.expectsProcess = isTerminal && e.parent == nil
             if origin.contains("vscode") { e.hostHint = .vscode }
