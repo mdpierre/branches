@@ -33,6 +33,10 @@ struct BranchesApp: App {
                 Divider()
                 Toggle("Show Ended Sessions", isOn: $model.showEnded)
             }
+            CommandGroup(after: .windowArrangement) {
+                Toggle("Keep Window on Top", isOn: $model.floatOnTop)
+                    .keyboardShortcut("t", modifiers: [.command, .option])
+            }
         }
 
         MenuBarExtra(isInserted: $model.showMenuBarIcon) {

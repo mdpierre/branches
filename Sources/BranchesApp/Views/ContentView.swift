@@ -31,6 +31,7 @@ struct ContentView: View {
             .ignoresSafeArea()
         }
         .overlay(alignment: .bottom) { toast }
+        .background { WindowLevelSetter(floating: model.floatOnTop) }
         .foregroundStyle(Palette.textPrimary)
         .frame(minWidth: 320, minHeight: 280)
         .focusable()
@@ -191,6 +192,40 @@ struct SummaryChip: View {
         .padding(.trailing, 9)
         .frame(height: 22)
         .background(Capsule().fill(Palette.chip))
+    }
+}
+
+/// Puts the hosting window at the floating level (above other apps) or back to normal.
+/// `.windowLevel(_:)` would do this in SwiftUI but needs macOS 15.
+private struct WindowLevelSetter: NSViewRepresentable {
+    var floating: Bool
+
+    func makeNSView(context: Context) -> ProbeView { ProbeView() }
+
+    func updateNSView(_ view: ProbeView, context: Context) {
+        view.floating = floating
+    }
+
+    final class ProbeView: NSView {
+        var floating = false { didSet { apply() } }
+
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            apply()
+        }
+
+        private func apply() {
+            guard let window else { return }
+            window.level = floating ? .floating : .normal
+            // Follow the user across Spaces and over full-screen apps while floating.
+            if floating {
+                window.collectionBehavior.insert([.canJoinAllSpaces, .fullScreenAuxiliary])
+            } else {
+                window.collectionBehavior.remove([.canJoinAllSpaces, .fullScreenAuxiliary])
+            }
+        }
     }
 }
 

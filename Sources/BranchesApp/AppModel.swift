@@ -34,6 +34,11 @@ final class AppModel {
     }
     static let menuBarKey = "showMenuBarIcon"
 
+    /// Keeps the main window above other apps' windows.
+    var floatOnTop: Bool {
+        didSet { UserDefaults.standard.set(floatOnTop, forKey: "floatOnTop") }
+    }
+
     /// The header scene's time of day: "auto" (follows the clock) or a `TimeOfDay` raw value.
     var sceneTime: String {
         didSet { UserDefaults.standard.set(sceneTime, forKey: "sceneTime") }
@@ -56,6 +61,7 @@ final class AppModel {
         UserDefaults.standard.register(defaults: [Self.menuBarKey: true])
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
         showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
+        floatOnTop = UserDefaults.standard.bool(forKey: "floatOnTop")
         notifyNeedsYou = UserDefaults.standard.bool(forKey: "notifyNeedsYou")
         notifyDone = UserDefaults.standard.bool(forKey: "notifyDone")
         // `--scene dawn|day|dusk|night` (screenshots) overrides the setting without saving it.
