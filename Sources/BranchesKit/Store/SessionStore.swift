@@ -17,7 +17,7 @@ public actor SessionStore {
 
     private var procs: [Int32: ProcessRecord] = [:]
     private var hosts: [Int32: HostApp?] = [:]
-    private var gitRoots: [String: String] = [:]
+    private var gitRoots: [String: (root: String, worktree: String?)] = [:]
     private var lastSeen: [String: Date] = [:]
     private var watchedRoots: [String] = []
     private var latest: StoreSnapshot = .empty
@@ -148,11 +148,12 @@ public actor SessionStore {
             if let pid, alive == true { host = resolveHost(pid) }
             if host == nil, let hint = e.hostHint { host = HostApp(kind: hint, name: hint == .vscode ? "VS Code" : "Codex") }
 
-            let root = projectRoot(for: e.cwd)
+            let (root, worktree) = projectRoot(for: e.cwd)
             sessions.append(SessionSnapshot(
                 id: e.key,
                 projectName: projectName(root),
                 projectPath: root,
+                worktree: worktree,
                 cwd: e.cwd,
                 title: e.title,
                 activity: status.display == .working || status.display == .needsYou ? e.activity : nil,
@@ -213,19 +214,11 @@ public actor SessionStore {
         return host
     }
 
-    private func projectRoot(for cwd: String) -> String {
-        guard !cwd.isEmpty else { return "" }
+    private func projectRoot(for cwd: String) -> (root: String, worktree: String?) {
         if let cached = gitRoots[cwd] { return cached }
-        let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser.path
-        var dir = cwd
-        var root = cwd
-        while dir != "/" && dir != home && !dir.isEmpty {
-            if fm.fileExists(atPath: dir + "/.git") { root = dir; break }
-            dir = (dir as NSString).deletingLastPathComponent
-        }
-        gitRoots[cwd] = root
-        return root
+        let resolved = ProjectRoot.resolve(cwd: cwd, home: FileManager.default.homeDirectoryForCurrentUser.path)
+        gitRoots[cwd] = resolved
+        return resolved
     }
 
     private func projectName(_ root: String) -> String {

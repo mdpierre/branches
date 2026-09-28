@@ -136,8 +136,15 @@ struct ContentView: View {
                 // Not lazy: the list is a few dozen rows, and a LazyVStack re-estimating row heights
                 // while the scroll offset feeds back into this view spun the main thread on fast scrolls.
                 VStack(alignment: .leading, spacing: Metrics.groupSpacing) {
-                    ForEach(model.groups) { group in
-                        ProjectGroupView(group: group)
+                    ForEach(model.sections) { section in
+                        if model.showsTierHeaders {
+                            TierHeaderView(section: section)
+                        }
+                        if !section.folded {
+                            ForEach(section.groups) { group in
+                                ProjectGroupView(group: group)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, 10)

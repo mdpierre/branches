@@ -18,6 +18,15 @@ struct ProjectGroup: Identifiable {
     }
 }
 
+/// Projects in one activity tier (Active, Recent or Background).
+struct TierSection: Identifiable {
+    var tier: ActivityTier
+    var groups: [ProjectGroup]
+    /// Shows only a "N projects" row until opened.
+    var folded: Bool
+    var id: ActivityTier { tier }
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -45,6 +54,16 @@ final class AppModel {
         didSet { UserDefaults.standard.set(pruneAfterHours, forKey: Self.pruneKey) }
     }
     static let pruneKey = "pruneAfterHours"
+
+    /// Sorts projects into Active / Recent / Background sections.
+    var organizeByActivity: Bool {
+        didSet { UserDefaults.standard.set(organizeByActivity, forKey: Self.organizeKey) }
+    }
+    static let organizeKey = "organizeByActivity"
+    /// The Background section is open.
+    var showBackground: Bool {
+        didSet { UserDefaults.standard.set(showBackground, forKey: "showBackground") }
+    }
     static let pruneChoices: [(hours: Int, label: String)] = [
         (1, "1 hour"), (3, "3 hours"), (6, "6 hours"), (8, "8 hours"), (12, "12 hours"),
         (24, "1 day"), (72, "3 days"), (168, "1 week"), (0, "Never"),
@@ -69,11 +88,13 @@ final class AppModel {
     private var started = false
 
     init() {
-        UserDefaults.standard.register(defaults: [Self.menuBarKey: true, Self.pruneKey: 24])
+        UserDefaults.standard.register(defaults: [Self.menuBarKey: true, Self.pruneKey: 24, Self.organizeKey: true])
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
         showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
         floatOnTop = UserDefaults.standard.bool(forKey: "floatOnTop")
         pruneAfterHours = UserDefaults.standard.integer(forKey: Self.pruneKey)
+        organizeByActivity = UserDefaults.standard.bool(forKey: Self.organizeKey)
+        showBackground = UserDefaults.standard.bool(forKey: "showBackground")
         notifyNeedsYou = UserDefaults.standard.bool(forKey: "notifyNeedsYou")
         notifyDone = UserDefaults.standard.bool(forKey: "notifyDone")
         // `--scene dawn|day|dusk|night` (screenshots) overrides the setting without saving it.
@@ -180,7 +201,31 @@ final class AppModel {
         return groups
     }
 
-    var flatRows: [SessionSnapshot] { groups.flatMap { $0.rows.map(\.session) } }
+    /// `groups`, split by activity tier. Off, or with a filter typed, it's one unfolded section.
+    var sections: [TierSection] {
+        let all = groups
+        guard organizeByActivity, filter.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return all.isEmpty ? [] : [TierSection(tier: .active, groups: all, folded: false)]
+        }
+        let now = Date()
+        let byTier = Dictionary(grouping: all) { ActivityTier.of($0.rows.map(\.session), now: now) }
+        let sections = ActivityTier.allCases.compactMap { tier in
+            byTier[tier].map { TierSection(tier: tier, groups: $0, folded: false) }
+        }
+        // Folding only helps when something else is showing.
+        return sections.map { s in
+            var s = s
+            s.folded = s.tier == .background && !showBackground && sections.count > 1
+            return s
+        }
+    }
+
+    /// Section headers only earn their space when there's more than one tier.
+    var showsTierHeaders: Bool { sections.count > 1 }
+
+    var flatRows: [SessionSnapshot] {
+        sections.filter { !$0.folded }.flatMap { $0.groups.flatMap { $0.rows.map(\.session) } }
+    }
 
     var needsYouCount: Int { snapshot.sessions.filter { $0.status.display == .needsYou }.count }
     var workingCount: Int { snapshot.sessions.filter { $0.status.display == .working }.count }

@@ -49,6 +49,11 @@ struct SettingsPopover: View {
                 .controlSize(.small)
                 .help("Floats the Branches window above other apps")
 
+            Toggle("Sort by activity", isOn: $model.organizeByActivity)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .help("Splits projects into Active (working or needs you), Recent (last hour) and Background")
+
             Picker("Hide sessions quiet for", selection: $model.pruneAfterHours) {
                 ForEach(AppModel.pruneChoices, id: \.hours) { Text($0.label).tag($0.hours) }
             }

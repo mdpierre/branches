@@ -55,6 +55,46 @@ struct ProjectGroupView: View {
     }
 }
 
+// MARK: - Tier header
+
+/// "ACTIVE", "RECENT", or a "Background · 4 projects" row that opens and folds that section.
+struct TierHeaderView: View {
+    @Environment(AppModel.self) private var model
+    let section: TierSection
+
+    var body: some View {
+        if section.tier == .background {
+            Button { model.showBackground.toggle() } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .rotationEffect(.degrees(section.folded ? 0 : 90))
+                    label
+                    if section.folded {
+                        Text("· \(section.groups.count) project\(section.groups.count == 1 ? "" : "s")")
+                            .font(Typo.caption)
+                    }
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Palette.textTertiary)
+            .padding(.bottom, -6)
+            .help(section.folded ? "Show projects quiet for over an hour" : "Hide projects quiet for over an hour")
+        } else {
+            label.foregroundStyle(Palette.textTertiary).padding(.bottom, -6)
+        }
+    }
+
+    private var label: some View {
+        Text(section.tier.label.uppercased())
+            .font(Typo.wordmark)
+            .tracking(1.2)
+            .padding(.leading, 2)
+    }
+}
+
 // MARK: - Session row
 
 struct SessionRowView: View {
@@ -81,6 +121,15 @@ struct SessionRowView: View {
                         .font(Typo.captionEmphasized)
                         .foregroundStyle(Palette.textSecondary)
                         .frame(width: 44, alignment: .leading)
+                    if let worktree = session.worktree {
+                        Label(worktree, systemImage: "arrow.triangle.branch")
+                            .labelStyle(.titleAndIcon)
+                            .font(Typo.caption)
+                            .foregroundStyle(Palette.textTertiary)
+                            .lineLimit(1)
+                            .fixedSize()
+                            .help("Worktree: \(abbreviate(session.cwd))")
+                    }
                     Text(session.title)
                         .font(Typo.title)
                         .foregroundStyle(session.status.display == .idle ? Palette.textSecondary : Palette.textPrimary)
