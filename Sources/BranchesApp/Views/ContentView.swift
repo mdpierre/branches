@@ -72,7 +72,7 @@ struct ContentView: View {
             EmptyStateView(diagnostics: model.snapshot.diagnostics)
                 .padding(.top, top)
         } else if model.groups.isEmpty {
-            Text(model.filter.isEmpty ? "Nothing active. Ended sessions are hidden." : "No sessions match “\(model.filter)”.")
+            Text(model.filter.isEmpty ? "Nothing active. Ended and quiet sessions are hidden." : "No sessions match “\(model.filter)”.")
                 .font(Typo.caption)
                 .foregroundStyle(Palette.textSecondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

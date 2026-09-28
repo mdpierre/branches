@@ -49,6 +49,13 @@ struct SettingsPopover: View {
                 .controlSize(.small)
                 .help("Floats the Branches window above other apps")
 
+            Picker("Hide sessions quiet for", selection: $model.pruneAfterHours) {
+                ForEach(AppModel.pruneChoices, id: \.hours) { Text($0.label).tag($0.hours) }
+            }
+            .controlSize(.small)
+            .fixedSize()
+            .help("Hides sessions with no activity for this long. Sessions that are working or need you always show.")
+
             Divider()
 
             Text("Time of day").font(Typo.captionEmphasized).foregroundStyle(.secondary)

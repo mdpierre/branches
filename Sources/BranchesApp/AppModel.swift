@@ -39,6 +39,17 @@ final class AppModel {
         didSet { UserDefaults.standard.set(floatOnTop, forKey: "floatOnTop") }
     }
 
+    /// Hides sessions with no activity for longer than this many hours (0 = never hide).
+    /// Sessions that are working or need you always show.
+    var pruneAfterHours: Int {
+        didSet { UserDefaults.standard.set(pruneAfterHours, forKey: Self.pruneKey) }
+    }
+    static let pruneKey = "pruneAfterHours"
+    static let pruneChoices: [(hours: Int, label: String)] = [
+        (1, "1 hour"), (3, "3 hours"), (6, "6 hours"), (8, "8 hours"), (12, "12 hours"),
+        (24, "1 day"), (72, "3 days"), (168, "1 week"), (0, "Never"),
+    ]
+
     /// The header scene's time of day: "auto" (follows the clock) or a `TimeOfDay` raw value.
     var sceneTime: String {
         didSet { UserDefaults.standard.set(sceneTime, forKey: "sceneTime") }
@@ -58,10 +69,11 @@ final class AppModel {
     private var started = false
 
     init() {
-        UserDefaults.standard.register(defaults: [Self.menuBarKey: true])
+        UserDefaults.standard.register(defaults: [Self.menuBarKey: true, Self.pruneKey: 24])
         showEnded = UserDefaults.standard.bool(forKey: "showEnded")
         showMenuBarIcon = UserDefaults.standard.bool(forKey: Self.menuBarKey)
         floatOnTop = UserDefaults.standard.bool(forKey: "floatOnTop")
+        pruneAfterHours = UserDefaults.standard.integer(forKey: Self.pruneKey)
         notifyNeedsYou = UserDefaults.standard.bool(forKey: "notifyNeedsYou")
         notifyDone = UserDefaults.standard.bool(forKey: "notifyDone")
         // `--scene dawn|day|dusk|night` (screenshots) overrides the setting without saving it.
@@ -120,17 +132,24 @@ final class AppModel {
 
     // MARK: Derived
 
+    /// False for a quiet session older than the prune window.
+    func isRecent(_ s: SessionSnapshot, now: Date = Date()) -> Bool {
+        guard pruneAfterHours > 0, s.status.display != .working, s.status.display != .needsYou else { return true }
+        return now.timeIntervalSince(s.lastActivityAt) < TimeInterval(pruneAfterHours) * 3600
+    }
+
     var groups: [ProjectGroup] {
         let needle = filter.trimmingCharacters(in: .whitespaces).lowercased()
+        let now = Date()
         let visible = snapshot.sessions.filter { s in
-            needle.isEmpty || s.projectName.lowercased().contains(needle) || s.title.lowercased().contains(needle)
+            isRecent(s, now: now) && (needle.isEmpty || s.projectName.lowercased().contains(needle) || s.title.lowercased().contains(needle))
         }
         let byProject = Dictionary(grouping: visible, by: \.projectPath)
         var groups: [ProjectGroup] = byProject.map { path, sessions in
             let live = sessions.filter { $0.status.display != .ended }
             let ended = sessions.filter { $0.status.display == .ended }
             let showAll = showEnded || expandedEnded.contains(path)
-            let recentEnded = ended.filter { Date().timeIntervalSince($0.status.since) < 30 * 60 }
+            let recentEnded = ended.filter { now.timeIntervalSince($0.status.since) < 30 * 60 }
             let shown = live + (showAll ? ended : recentEnded)
             return ProjectGroup(
                 name: sessions.first?.projectName ?? "Unknown",
