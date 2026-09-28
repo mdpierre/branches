@@ -19,7 +19,7 @@ Deliverables 8 and 9. The goal: *a refined developer tool interpreted through fo
 - **Top strip** (overlaid on the header): the wordmark `BRANCHES`, tracking +8%. On the right, a summary chip such as **`🏮 2 need you · 🌱 3 working`** (click it to cycle the selection through "Needs you" rows), plus a `⋯` settings button. Both sit on `chip` capsules so they read over the sky. Once the header shrinks, the strip moves beside the traffic lights.
 - Body: a scrolling list of **project groups**.
 - **Menu bar panel:** the same scene at a smaller size: a 60 pt strip of the treeline (the header shrunk most of the way, with the moon and fireflies nudged to stay in view), with the wordmark and summary chip on top. Below it is a flat list of sessions with their plant glyphs, over the forest background.
-- There is no sidebar, no tabs, no toolbar and no second screen. Settings = a small popover from a `⋯` button (hook install/remove, show ended sessions, diagnostics).
+- There is no sidebar, no tabs, no toolbar and no second screen. Settings = a small popover from a `⋯` button (hook install/remove, show ended sessions, hide sessions quiet for longer than a chosen time (1 day by default; "Never" turns it off), diagnostics).
 
 ### Project group
 ```

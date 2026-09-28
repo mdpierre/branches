@@ -103,7 +103,7 @@ struct MenuBarPanel: View {
 
     private var sessions: [SessionSnapshot] {
         model.snapshot.sessions
-            .filter { $0.status.display != .ended && $0.parent == nil }
+            .filter { $0.status.display != .ended && $0.parent == nil && model.isRecent($0) }
             .sorted { a, b in
                 if a.status.display != b.status.display { return a.status.display < b.status.display }
                 return a.status.since > b.status.since
