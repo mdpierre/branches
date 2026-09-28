@@ -2,8 +2,8 @@
 
 **What it is:** a small Mac app that shows every Claude Code and Codex session running on your computer, what each one is doing, and whether it needs you. You click one to jump to its terminal. It never talks to the agents and never sends anything anywhere.
 
-## Build status (2026-09-26)
-**v0.1.0 is released** on [GitHub Releases](https://github.com/mdpierre/branches/releases/tag/v0.1.0) (2026-09-26) as `Branches-v0.1.0-macos-universal.zip`. The build is ad-hoc signed and not notarized, so the README explains how to open it the first time.
+## Build status (2026-09-28)
+**v0.1.1 is released** on [GitHub Releases](https://github.com/mdpierre/branches/releases/tag/v0.1.1) (2026-09-28) as `Branches-v0.1.1-macos-universal.zip`. It fixes a freeze when scrolling the list fast, adds Keep Window on Top (⌥⌘T), and opens the Codex app (not ChatGPT Classic) for Codex sessions. v0.1.0 shipped 2026-09-26. The build is ad-hoc signed and not notarized, so the README explains how to open it the first time.
 
 v0.1 covers milestones M1–M4 and M6 from `05-build-plan.md`, plus most of M7. It runs on real sessions. `swift test` passes 44 tests. `scripts/bundle.sh` builds a universal `dist/Branches.app`, and `scripts/package-release.sh <version>` builds it and zips it for a release. The version must match `CFBundleShortVersionString` in `Resources/Info.plist`.
 
