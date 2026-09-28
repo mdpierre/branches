@@ -132,7 +132,9 @@ struct ContentView: View {
     private func sessionList(top: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: Metrics.groupSpacing) {
+                // Not lazy: the list is a few dozen rows, and a LazyVStack re-estimating row heights
+                // while the scroll offset feeds back into this view spun the main thread on fast scrolls.
+                VStack(alignment: .leading, spacing: Metrics.groupSpacing) {
                     ForEach(model.groups) { group in
                         ProjectGroupView(group: group)
                     }
@@ -201,7 +203,9 @@ private struct ScrollOffsetReader: NSViewRepresentable {
     func makeNSView(context: Context) -> ProbeView {
         let view = ProbeView()
         view.onChange = { value in
-            if abs(offset - value) > 0.5 { offset = value }
+            // Only the collapse range matters; past it, scrolling shouldn't re-render the whole view.
+            let clamped = min(max(value, 0), Metrics.headerCollapseDistance)
+            if abs(offset - clamped) > 0.5 { offset = clamped }
         }
         return view
     }
