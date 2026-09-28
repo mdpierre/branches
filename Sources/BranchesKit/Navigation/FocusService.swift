@@ -62,22 +62,34 @@ public enum FocusService {
 
     @discardableResult
     private static func activate(_ host: HostApp) -> Bool {
+        // Codex sessions always go to the Codex app, never ChatGPT Classic. Opening it by URL behaves
+        // like a Dock click: it launches the app if needed and brings back a window if all are closed.
+        if host.kind == .chatGPT {
+            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: codexBundleID) else { return false }
+            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+            return true
+        }
         if let pid = host.pid, let app = NSRunningApplication(processIdentifier: pid) {
             return app.activate()
         }
-        if let id = host.bundleID ?? defaultBundleID(host.kind),
-           let app = NSRunningApplication.runningApplications(withBundleIdentifier: id).first {
-            return app.activate()
+        let ids = host.bundleID.map { [$0] } ?? defaultBundleIDs(host.kind)
+        for id in ids {
+            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: id).first {
+                return app.activate()
+            }
         }
         return false
     }
 
-    private static func defaultBundleID(_ kind: HostKind) -> String? {
+    /// The Codex app installs as ChatGPT.app; ChatGPT Classic is `com.openai.chat`.
+    private static let codexBundleID = "com.openai.codex"
+
+    private static func defaultBundleIDs(_ kind: HostKind) -> [String] {
         switch kind {
-        case .chatGPT: "com.openai.chat"
-        case .vscode: "com.microsoft.VSCode"
-        case .claudeDesktop: "com.anthropic.claudefordesktop"
-        default: nil
+        case .chatGPT: [codexBundleID]
+        case .vscode: ["com.microsoft.VSCode"]
+        case .claudeDesktop: ["com.anthropic.claudefordesktop"]
+        default: []
         }
     }
 

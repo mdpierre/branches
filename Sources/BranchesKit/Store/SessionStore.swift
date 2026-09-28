@@ -146,7 +146,7 @@ public actor SessionStore {
 
             var host: HostApp?
             if let pid, alive == true { host = resolveHost(pid) }
-            if host == nil, let hint = e.hostHint { host = HostApp(kind: hint, name: hint == .vscode ? "VS Code" : "ChatGPT") }
+            if host == nil, let hint = e.hostHint { host = HostApp(kind: hint, name: hint == .vscode ? "VS Code" : "Codex") }
 
             let root = projectRoot(for: e.cwd)
             sessions.append(SessionSnapshot(

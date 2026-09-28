@@ -44,6 +44,10 @@ struct SettingsPopover: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .help("Keeps Branches running in the menu bar when you close the window")
+            Toggle("Keep window on top", isOn: $model.floatOnTop)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .help("Floats the Branches window above other apps")
 
             Divider()
 

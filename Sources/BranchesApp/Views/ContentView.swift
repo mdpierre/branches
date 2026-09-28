@@ -31,6 +31,7 @@ struct ContentView: View {
             .ignoresSafeArea()
         }
         .overlay(alignment: .bottom) { toast }
+        .background { WindowLevelSetter(floating: model.floatOnTop) }
         .foregroundStyle(Palette.textPrimary)
         .frame(minWidth: 320, minHeight: 280)
         .focusable()
@@ -132,7 +133,9 @@ struct ContentView: View {
     private func sessionList(top: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: Metrics.groupSpacing) {
+                // Not lazy: the list is a few dozen rows, and a LazyVStack re-estimating row heights
+                // while the scroll offset feeds back into this view spun the main thread on fast scrolls.
+                VStack(alignment: .leading, spacing: Metrics.groupSpacing) {
                     ForEach(model.groups) { group in
                         ProjectGroupView(group: group)
                     }
@@ -192,6 +195,40 @@ struct SummaryChip: View {
     }
 }
 
+/// Puts the hosting window at the floating level (above other apps) or back to normal.
+/// `.windowLevel(_:)` would do this in SwiftUI but needs macOS 15.
+private struct WindowLevelSetter: NSViewRepresentable {
+    var floating: Bool
+
+    func makeNSView(context: Context) -> ProbeView { ProbeView() }
+
+    func updateNSView(_ view: ProbeView, context: Context) {
+        view.floating = floating
+    }
+
+    final class ProbeView: NSView {
+        var floating = false { didSet { apply() } }
+
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            apply()
+        }
+
+        private func apply() {
+            guard let window else { return }
+            window.level = floating ? .floating : .normal
+            // Follow the user across Spaces and over full-screen apps while floating.
+            if floating {
+                window.collectionBehavior.insert([.canJoinAllSpaces, .fullScreenAuxiliary])
+            } else {
+                window.collectionBehavior.remove([.canJoinAllSpaces, .fullScreenAuxiliary])
+            }
+        }
+    }
+}
+
 /// Reports how far the enclosing scroll view has scrolled. A GeometryReader in the scroll content
 /// doesn't re-report on macOS as the list scrolls (and `onScrollGeometryChange` needs macOS 15),
 /// so this watches the NSScrollView's clip view directly.
@@ -201,7 +238,9 @@ private struct ScrollOffsetReader: NSViewRepresentable {
     func makeNSView(context: Context) -> ProbeView {
         let view = ProbeView()
         view.onChange = { value in
-            if abs(offset - value) > 0.5 { offset = value }
+            // Only the collapse range matters; past it, scrolling shouldn't re-render the whole view.
+            let clamped = min(max(value, 0), Metrics.headerCollapseDistance)
+            if abs(offset - clamped) > 0.5 { offset = clamped }
         }
         return view
     }
