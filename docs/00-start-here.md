@@ -13,6 +13,7 @@ Where the build differs from the plan:
 - **Bundle ID** is `app.branches.Branches`. **License** is MIT.
 - **Added after v0.1:** a menu bar icon with a "needs you" count and drop-down panel, plus optional notifications (needs you / finished a turn).
 - **Forest v1 visual pass (2026-09-25):** treeline header with a time-of-day sky and "needs you" fireflies, plant status glyphs, twig connectors and a forest-floor background. See `04-design.md`. `--screenshot` also takes `--window-size WxH`, `--scene dawn|day|dusk|night`, `--scroll N` and `--menu-bar-screenshot <prefix>` (captures the real menu bar icon and the drop-down it opens).
+- **Sort by activity (after v0.1.1):** projects are split into Active / Recent / Background sections (Background folds away), and worktrees group under their main repo. Deterministic, no LLM. See `04-design.md`.
 - **Not done yet:** Developer ID signing + notarization (`scripts/notarize.sh` is ready but needs an Apple Developer Program membership; until then releases are ad-hoc signed) and tmux pane focusing.
 
 ## The planning package

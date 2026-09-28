@@ -212,6 +212,8 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
     public var provider: ProviderID { id.provider }
     public var projectName: String
     public var projectPath: String
+    /// The linked git worktree this session runs in, when it isn't the main checkout.
+    public var worktree: String?
     public var cwd: String
     public var title: String
     public var activity: String?
@@ -226,7 +228,7 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
     public var lastActivityAt: Date
 
     public init(
-        id: SessionKey, projectName: String, projectPath: String, cwd: String, title: String,
+        id: SessionKey, projectName: String, projectPath: String, worktree: String? = nil, cwd: String, title: String,
         activity: String? = nil, lastPrompt: String? = nil, status: StatusResult, waitingFor: String? = nil, host: HostApp? = nil,
         tty: String? = nil, pid: Int32? = nil, parent: SessionKey? = nil, resumeCommand: String? = nil,
         lastActivityAt: Date
@@ -234,6 +236,7 @@ public struct SessionSnapshot: Identifiable, Sendable, Equatable {
         self.id = id
         self.projectName = projectName
         self.projectPath = projectPath
+        self.worktree = worktree
         self.cwd = cwd
         self.title = title
         self.activity = activity
